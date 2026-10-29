@@ -1,0 +1,22 @@
+# Backend build outputs & IDEs
+backend/target/
+backend/*.log
+backend/.idea/
+backend/*.iml
+backend/.vscode/
+
+# Mobile dependencies and build artifacts
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/*.log
+
+# Environment & credentials
+.env
+.env*.local
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini

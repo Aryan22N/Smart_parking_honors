@@ -1,0 +1,73 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: smart-parking-backend
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/smart_parking_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:swayam12}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+      pool-name: SmartParkingHikariPool
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+parking:
+  pricing:
+    block-duration-seconds: 10800
+    block-rate-inr: 50
+  timezone: Asia/Kolkata
+  cors:
+    allowed-origins:
+      - "http://localhost:3000"
+      - "http://localhost:8081"
+      - "http://localhost:19006"
+      - "http://127.0.0.1:8081"
+      - "exp://*"
+    allowed-methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    allowed-headers:
+      - "*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
