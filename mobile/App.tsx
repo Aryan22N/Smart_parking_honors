@@ -28,8 +28,32 @@ interface NavItemConfig {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const getInitialTab = (): TabType => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location) {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') as TabType;
+      if (tabParam && ['dashboard', 'slots', 'entry', 'active', 'history', 'revenue'].includes(tabParam)) {
+        return tabParam;
+      }
+      const hashParam = window.location.hash.replace('#', '') as TabType;
+      if (hashParam && ['dashboard', 'slots', 'entry', 'active', 'history', 'revenue'].includes(hashParam)) {
+        return hashParam;
+      }
+    }
+    return 'dashboard';
+  };
+
+  const [activeTab, setActiveTabState] = useState<TabType>(getInitialTab);
   const [slotToBook, setSlotToBook] = useState<ParkingSlot | null>(null);
+
+  const setActiveTab = (tab: TabType) => {
+    setActiveTabState(tab);
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
 
   const handleSelectSlotToBook = (slot: ParkingSlot) => {
     setSlotToBook(slot);
