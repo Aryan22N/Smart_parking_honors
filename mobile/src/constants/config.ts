@@ -1,22 +1,24 @@
 import { Platform } from 'react-native';
 
 /**
- * Resolves the backend API base URL intelligently:
- * 1. Checks EXPO_PUBLIC_API_URL environment variable if set.
- * 2. On Android Emulator: Uses 10.0.2.2:8080 (which maps to host PC localhost:8080).
- * 3. On iOS Simulator / Web: Uses localhost:8080.
- * 4. For physical devices: Replace with your development machine's local LAN IP (e.g., http://192.168.1.X:8080).
+ * Your development PC's Wi-Fi LAN IP address.
+ * Ensure your physical mobile phone is connected to the same Wi-Fi network.
  */
+export const HOST_LAN_IP = '10.78.168.205';
+
 const getDefaultBaseUrl = (): string => {
+  // 1. Explicit environment variable takes top precedence
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
-  if (Platform.OS === 'android') {
-    // Android emulator's loopback alias to host development machine
-    return 'http://10.0.2.2:8080';
+
+  // 2. Browser web application
+  if (Platform.OS === 'web') {
+    return 'http://localhost:8080';
   }
-  // iOS Simulator / Web / Desktop
-  return 'http://localhost:8080';
+
+  // 3. Physical mobile device or emulator on the local network
+  return `http://${HOST_LAN_IP}:8080`;
 };
 
 export const API_BASE_URL = getDefaultBaseUrl();
