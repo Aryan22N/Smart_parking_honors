@@ -421,6 +421,3 @@ curl http://localhost:8080/api/v1/reports/revenue
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License — see the [LICENSE](mobile/LICENSE) file for details.
