@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS } from '../constants/colors';
+import { Icon, IconName } from './Icon';
 
 interface StatCardProps {
   label: string;
   value: string | number;
   subValue?: string;
   variant?: 'primary' | 'available' | 'occupied' | 'warning' | 'default';
-  icon?: string;
+  iconName?: IconName;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -15,63 +16,59 @@ export const StatCard: React.FC<StatCardProps> = ({
   value,
   subValue,
   variant = 'default',
-  icon,
+  iconName,
 }) => {
-  const getTheme = () => {
+  const getTheme = (): { accent: string; badgeBg: string; defaultIcon: IconName } => {
     switch (variant) {
       case 'primary':
         return {
           accent: COLORS.primary,
           badgeBg: COLORS.primarySubtle,
-          badgeText: COLORS.primaryDark,
-          defaultIcon: '🅿',
+          defaultIcon: 'bays',
         };
       case 'available':
         return {
           accent: COLORS.available,
           badgeBg: COLORS.availableBg,
-          badgeText: COLORS.availableText,
-          defaultIcon: '✓',
+          defaultIcon: 'check',
         };
       case 'occupied':
         return {
           accent: COLORS.occupied,
           badgeBg: COLORS.occupiedBg,
-          badgeText: COLORS.occupiedText,
-          defaultIcon: '🚗',
+          defaultIcon: 'car',
         };
       case 'warning':
         return {
           accent: COLORS.warning,
           badgeBg: COLORS.warningBg,
-          badgeText: COLORS.warningText,
-          defaultIcon: '⚡',
+          defaultIcon: 'alert',
         };
       default:
         return {
           accent: COLORS.textSlate,
           badgeBg: '#F1F5F9',
-          badgeText: COLORS.textSlate,
-          defaultIcon: '📊',
+          defaultIcon: 'hub',
         };
     }
   };
 
   const theme = getTheme();
+  const icon = iconName || theme.defaultIcon;
 
   return (
     <View style={styles.card}>
       <View style={[styles.topAccentBar, { backgroundColor: theme.accent }]} />
       <View style={styles.content}>
         <View style={styles.headerRow}>
-          <Text style={styles.label}>{label}</Text>
+          <Text style={styles.label} numberOfLines={1}>{label}</Text>
           <View style={[styles.iconBox, { backgroundColor: theme.badgeBg }]}>
-            <Text style={styles.iconText}>{icon || theme.defaultIcon}</Text>
+            <Icon name={icon} size={11} color={theme.accent} />
           </View>
         </View>
 
         <Text style={[styles.value, { color: theme.accent }]}>{value}</Text>
-        {subValue ? <Text style={styles.subValue}>{subValue}</Text> : null}
+        {subValue ? <Text style={styles.subValue} numberOfLines={1}>{subValue}</Text> : null}
       </View>
     </View>
   );
@@ -82,56 +79,55 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 100,
     backgroundColor: COLORS.cardSurface,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
     overflow: 'hidden',
     shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
+    justifyContent: 'space-between',
   },
   topAccentBar: {
     height: 3,
     width: '100%',
   },
   content: {
-    padding: 14,
+    padding: 12,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   label: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: COLORS.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     flex: 1,
+    marginRight: 4,
   },
   iconBox: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
+    width: 22,
+    height: 22,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconText: {
-    fontSize: 11,
-  },
   value: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: -0.5,
   },
   subValue: {
     fontSize: 10,
     color: COLORS.textMuted,
-    marginTop: 4,
-    fontWeight: '600',
+    marginTop: 3,
+    fontWeight: '500',
   },
 });

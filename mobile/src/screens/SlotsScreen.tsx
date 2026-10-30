@@ -98,7 +98,7 @@ export const SlotsScreen: React.FC<SlotsScreenProps> = ({ onSelectSlotToBook }) 
         title="Parking Bays"
         subtitle={`${availableCount} Available • ${occupiedCount} Occupied`}
         badge="INVENTORY"
-        rightActionText="Sync ⟳"
+        rightActionText="Sync"
         onRightAction={fetchSlots}
       />
 
@@ -165,7 +165,7 @@ export const SlotsScreen: React.FC<SlotsScreenProps> = ({ onSelectSlotToBook }) 
       >
         {filteredSlots.length === 0 ? (
           <EmptyState
-            icon="🅿"
+            iconName="bays"
             title="No Matching Bays"
             description={`No parking slots match the current filter "${filter}". Reset filter to view all slots.`}
             actionLabel="Show All Bays"
@@ -256,8 +256,8 @@ const styles = StyleSheet.create({
   },
   utilizationStrip: {
     backgroundColor: COLORS.cardSurface,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
@@ -268,17 +268,17 @@ const styles = StyleSheet.create({
   },
   utilizationTitle: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.textMuted,
     letterSpacing: 0.6,
   },
   utilizationPercent: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.primaryDark,
   },
   utilizationBarBg: {
-    height: 6,
+    height: 5,
     backgroundColor: '#E2E8F0',
     borderRadius: 3,
     overflow: 'hidden',
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: COLORS.canvasBg,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 8,
     gap: 8,
   },
   filterBtn: {
@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.cardSurface,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
     gap: 5,
@@ -317,12 +317,12 @@ const styles = StyleSheet.create({
   },
   filterText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
     color: COLORS.textSlate,
   },
   filterTextActive: {
     color: COLORS.primaryDark,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   gridContainer: {
     padding: 16,
@@ -331,23 +331,23 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
     justifyContent: 'space-between',
   },
   slotCard: {
     width: '48%',
     backgroundColor: COLORS.cardSurface,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 14,
+    padding: 12,
     position: 'relative',
     overflow: 'hidden',
     shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   slotCardAvailable: {
     backgroundColor: '#FFFFFF',
@@ -363,8 +363,8 @@ const styles = StyleSheet.create({
   floorMarking: {
     position: 'absolute',
     top: 0,
-    left: 12,
-    right: 12,
+    left: 10,
+    right: 10,
     height: 3,
     borderBottomLeftRadius: 2,
     borderBottomRightRadius: 2,
@@ -373,61 +373,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-    paddingTop: 4,
+    marginBottom: 6,
+    paddingTop: 3,
   },
   bayBadge: {
     backgroundColor: COLORS.cardSurfaceAlt,
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 2,
-    borderRadius: 5,
+    borderRadius: 4,
   },
   bayBadgeText: {
     fontSize: 8,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.textMuted,
   },
   slotCenter: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   slotNumber: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontSize: 22,
+    fontWeight: '800',
     letterSpacing: -0.5,
   },
   slotType: {
     fontSize: 10,
     color: COLORS.textMuted,
-    fontWeight: '600',
-    marginTop: 2,
+    fontWeight: '500',
+    marginTop: 1,
   },
   slotFooter: {
-    marginTop: 8,
+    marginTop: 6,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    paddingTop: 8,
+    paddingTop: 6,
   },
   bookPromptBox: {
     backgroundColor: COLORS.availableBg,
-    paddingVertical: 4,
+    paddingVertical: 3.5,
     borderRadius: 6,
     alignItems: 'center',
   },
   bookPromptText: {
-    fontSize: 10,
-    fontWeight: '800',
+    fontSize: 9.5,
+    fontWeight: '700',
     color: COLORS.availableText,
   },
   occupiedTag: {
     backgroundColor: COLORS.occupiedBg,
-    paddingVertical: 4,
+    paddingVertical: 3.5,
     borderRadius: 6,
     alignItems: 'center',
   },
   occupiedTagText: {
-    fontSize: 10,
-    fontWeight: '800',
+    fontSize: 9.5,
+    fontWeight: '700',
     color: COLORS.occupiedText,
   },
 });

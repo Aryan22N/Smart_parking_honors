@@ -13,6 +13,7 @@ import {
 import { COLORS } from '../constants/colors';
 import { Header } from '../components/Header';
 import { EmptyState } from '../components/EmptyState';
+import { Icon } from '../components/Icon';
 import { reportsApi } from '../api/endpoints';
 import { DailyRevenue } from '../types';
 import { formatCurrency } from '../utils/formatting';
@@ -78,7 +79,7 @@ export const RevenueReportScreen: React.FC = () => {
         title="Revenue Intel"
         subtitle="Finalized collections, payment settlement & billing compliance"
         badge="AUDITED"
-        rightActionText="Sync ⟳"
+        rightActionText="Sync"
         onRightAction={() => fetchRevenue(selectedDate)}
       />
 
@@ -123,6 +124,7 @@ export const RevenueReportScreen: React.FC = () => {
 
           {/* Custom Date Input Bar */}
           <View style={styles.customDateBox}>
+            <Icon name="clock" size={14} color={COLORS.textMuted} />
             <TextInput
               style={styles.textInput}
               value={customInputDate}
@@ -144,7 +146,7 @@ export const RevenueReportScreen: React.FC = () => {
           </View>
         ) : hasNoSessions ? (
           <EmptyState
-            icon="📊"
+            iconName="revenue"
             title={`No Finalized Billings on ${selectedDate}`}
             description="Revenue calculations are compiled exclusively from completed vehicle checkouts. Active parking fees will appear here once vehicles exit."
             actionLabel="View Today's Report"
@@ -237,7 +239,7 @@ export const RevenueReportScreen: React.FC = () => {
             {/* Tariff Rules Compliance Card */}
             <View style={styles.policyCard}>
               <View style={styles.policyIconBox}>
-                <Text style={styles.policyIcon}>📋</Text>
+                <Icon name="receipt" size={16} color={COLORS.primaryDark} />
               </View>
               <View style={styles.policyContent}>
                 <Text style={styles.policyTitle}>Tariff Rules & Billing Logic</Text>
@@ -306,16 +308,20 @@ const styles = StyleSheet.create({
   },
   customDateBox: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-  },
-  textInput: {
-    flex: 1,
     backgroundColor: COLORS.inputBg,
     borderWidth: 1,
     borderColor: COLORS.inputBorder,
     borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingLeft: 10,
+    paddingRight: 4,
+    paddingVertical: 4,
+  },
+  textInput: {
+    flex: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
     fontSize: 13,
     color: COLORS.textDark,
     fontWeight: '700',

@@ -14,6 +14,7 @@ import { COLORS } from '../constants/colors';
 import { Header } from '../components/Header';
 import { InvoiceModal } from '../components/InvoiceModal';
 import { EmptyState } from '../components/EmptyState';
+import { Icon } from '../components/Icon';
 import { sessionsApi } from '../api/endpoints';
 import { ParkingSession, Invoice } from '../types';
 import { formatCurrency, formatDateTime } from '../utils/formatting';
@@ -163,7 +164,10 @@ export const HistoryScreen: React.FC = () => {
             onPress={() => handleViewInvoice(item.id)}
             activeOpacity={0.8}
           >
-            <Text style={styles.invoiceBtnText}>View Receipt 📄</Text>
+            <View style={styles.btnRow}>
+              <Icon name="receipt" size={12} color={COLORS.primaryDark} />
+              <Text style={styles.invoiceBtnText}>Receipt</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -176,26 +180,29 @@ export const HistoryScreen: React.FC = () => {
         title="Session Ledger"
         subtitle="Audited history of completed checkouts and billing invoices"
         badge="LEDGER"
-        rightActionText="Sync ⟳"
+        rightActionText="Sync"
         onRightAction={() => fetchHistory(0, false)}
       />
 
       {/* Search Input Filter */}
       {history.length > 0 && (
         <View style={styles.searchBarContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by license plate, bay, or ID..."
-            placeholderTextColor={COLORS.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="characters"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
-              <Text style={styles.clearSearchText}>✕</Text>
-            </TouchableOpacity>
-          )}
+          <View style={styles.searchInputWrapper}>
+            <Icon name="search" size={14} color={COLORS.textMuted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search by license plate, bay, or ID..."
+              placeholderTextColor={COLORS.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="characters"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Icon name="close" size={10} color={COLORS.textSlate} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       )}
 
@@ -217,7 +224,7 @@ export const HistoryScreen: React.FC = () => {
           onEndReachedThreshold={0.3}
           ListEmptyComponent={
             <EmptyState
-              icon="📜"
+              iconName="ledger"
               title={history.length === 0 ? 'No Historical Records' : 'No Matching Sessions'}
               description={
                 history.length === 0
@@ -270,23 +277,25 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    position: 'relative',
   },
-  searchInput: {
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.cardSurface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
+  },
+  searchInput: {
+    flex: 1,
     paddingVertical: 9,
+    paddingHorizontal: 8,
     fontSize: 13,
     color: COLORS.textDark,
     fontWeight: '600',
   },
   clearSearchBtn: {
-    position: 'absolute',
-    right: 26,
-    top: 20,
     width: 20,
     height: 20,
     borderRadius: 10,
@@ -294,10 +303,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  clearSearchText: {
-    color: COLORS.textSlate,
-    fontSize: 10,
-    fontWeight: '800',
+  btnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   listContent: {
     padding: 16,

@@ -17,12 +17,14 @@ import { ActiveSessionsScreen } from './src/screens/ActiveSessionsScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { RevenueReportScreen } from './src/screens/RevenueReportScreen';
 
+import { Icon, IconName } from './src/components/Icon';
+
 type TabType = 'dashboard' | 'slots' | 'entry' | 'active' | 'history' | 'revenue';
 
 interface NavItemConfig {
   id: TabType;
   label: string;
-  icon: string;
+  icon: IconName;
 }
 
 export default function App() {
@@ -35,12 +37,12 @@ export default function App() {
   };
 
   const navItems: NavItemConfig[] = [
-    { id: 'dashboard', label: 'Hub', icon: '📊' },
-    { id: 'slots', label: 'Bays', icon: '🅿' },
-    { id: 'entry', label: 'Check-In', icon: '⚡' },
-    { id: 'active', label: 'Active', icon: '⏱️' },
-    { id: 'history', label: 'Ledger', icon: '📜' },
-    { id: 'revenue', label: 'Revenue', icon: '💎' },
+    { id: 'dashboard', label: 'Hub', icon: 'hub' },
+    { id: 'slots', label: 'Bays', icon: 'bays' },
+    { id: 'entry', label: 'Check-In', icon: 'entry' },
+    { id: 'active', label: 'Active', icon: 'active' },
+    { id: 'history', label: 'Ledger', icon: 'ledger' },
+    { id: 'revenue', label: 'Revenue', icon: 'revenue' },
   ];
 
   const renderScreen = () => {
@@ -105,9 +107,11 @@ export default function App() {
                 activeOpacity={0.8}
               >
                 <View style={[styles.iconBox, isActive && styles.iconBoxActive]}>
-                  <Text style={[styles.navIcon, isActive && styles.navIconActive]}>
-                    {item.icon}
-                  </Text>
+                  <Icon
+                    name={item.icon}
+                    size={16}
+                    color={isActive ? COLORS.primaryLight : '#94A3B8'}
+                  />
                 </View>
                 <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>
                   {item.label}

@@ -14,6 +14,7 @@ import { COLORS } from '../constants/colors';
 import { Header } from '../components/Header';
 import { InvoiceModal } from '../components/InvoiceModal';
 import { EmptyState } from '../components/EmptyState';
+import { Icon } from '../components/Icon';
 import { sessionsApi } from '../api/endpoints';
 import { ParkingSession, Invoice } from '../types';
 import { formatCurrency, formatTimeOnly } from '../utils/formatting';
@@ -143,7 +144,7 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
         title="Active Sessions"
         subtitle={`${sessions.length} vehicles currently parked in bays`}
         badge="MONITORING"
-        rightActionText="Sync ⟳"
+        rightActionText="Sync"
         onRightAction={fetchActiveSessions}
       />
 
@@ -167,19 +168,22 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
       {/* Search Filter Bar */}
       {sessions.length > 0 && (
         <View style={styles.searchBarBox}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by license plate or bay (e.g. MH12 or A-01)..."
-            placeholderTextColor={COLORS.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="characters"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
-              <Text style={styles.clearBtnText}>✕</Text>
-            </TouchableOpacity>
-          )}
+          <View style={styles.searchInputWrapper}>
+            <Icon name="search" size={14} color={COLORS.textMuted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search by license plate or bay (e.g. MH12, A-01)..."
+              placeholderTextColor={COLORS.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="characters"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Icon name="close" size={10} color={COLORS.textSlate} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       )}
 
@@ -192,7 +196,7 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
       >
         {filteredSessions.length === 0 ? (
           <EmptyState
-            icon="⏱️"
+            iconName="active"
             title={sessions.length === 0 ? 'No Active Sessions' : 'No Matching Vehicles'}
             description={
               sessions.length === 0
@@ -261,7 +265,10 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
                     {isRecalculating ? (
                       <ActivityIndicator size="small" color={COLORS.primary} />
                     ) : (
-                      <Text style={styles.recalcBtnText}>Recalculate ⟳</Text>
+                      <View style={styles.btnRow}>
+                        <Icon name="refresh" size={12} color={COLORS.primaryDark} />
+                        <Text style={styles.recalcBtnText}>Recalculate</Text>
+                      </View>
                     )}
                   </TouchableOpacity>
 
@@ -274,7 +281,10 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
                     {isCheckingOut ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
-                      <Text style={styles.checkoutBtnText}>Check Out Vehicle →</Text>
+                      <View style={styles.btnRow}>
+                        <Text style={styles.checkoutBtnText}>Checkout Bay</Text>
+                        <Icon name="arrow-right" size={12} color="#FFFFFF" />
+                      </View>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -346,29 +356,36 @@ const styles = StyleSheet.create({
   searchBarBox: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    position: 'relative',
   },
-  searchInput: {
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.cardSurface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
+  },
+  searchInput: {
+    flex: 1,
     paddingVertical: 10,
+    paddingHorizontal: 8,
     fontSize: 13,
     color: COLORS.textDark,
     fontWeight: '600',
   },
   clearBtn: {
-    position: 'absolute',
-    right: 26,
-    top: 20,
     width: 20,
     height: 20,
     borderRadius: 10,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  btnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   clearBtnText: {
     color: COLORS.textSlate,

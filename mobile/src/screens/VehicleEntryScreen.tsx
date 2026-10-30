@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { Header } from '../components/Header';
+import { Icon } from '../components/Icon';
 import { slotsApi, sessionsApi } from '../api/endpoints';
 import { ParkingSlot, ParkingSession } from '../types';
 import { formatDateTime } from '../utils/formatting';
@@ -174,7 +175,7 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
               </Text>
             </View>
             <View style={styles.plateSecurityBadge}>
-              <Text style={styles.plateSecurityText}>🔒</Text>
+              <Icon name="check" size={10} color={COLORS.primaryDark} />
             </View>
           </View>
 
@@ -184,11 +185,21 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
             {['MH12AB1234', 'KA01MJ8888', 'DL03CA5555', '22BH1234AA'].map((sample) => (
               <TouchableOpacity
                 key={sample}
-                style={styles.presetChip}
+                style={[
+                  styles.presetChip,
+                  vehicleNumber === sample && styles.presetChipActive,
+                ]}
                 onPress={() => handleQuickPlateSelect(sample)}
                 activeOpacity={0.75}
               >
-                <Text style={styles.presetChipText}>{sample}</Text>
+                <Text
+                  style={[
+                    styles.presetChipText,
+                    vehicleNumber === sample && styles.presetChipTextActive,
+                  ]}
+                >
+                  {sample}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -221,7 +232,7 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
               <Text style={styles.inputLabel}>Bay Allocation Strategy</Text>
               <TouchableOpacity onPress={loadAvailableSlots} disabled={loadingSlots}>
                 <Text style={styles.refreshText}>
-                  {loadingSlots ? 'Updating...' : 'Refresh Bays ⟳'}
+                  {loadingSlots ? 'Updating...' : 'Refresh Bays'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -301,7 +312,7 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
           {/* Fixed Tariff Policy Note */}
           <View style={styles.tariffCard}>
             <View style={styles.tariffIconBox}>
-              <Text style={styles.tariffIcon}>ℹ️</Text>
+              <Icon name="alert" size={12} color={COLORS.primaryDark} />
             </View>
             <View style={styles.tariffTexts}>
               <Text style={styles.tariffTitle}>Standard Tariff: ₹50 / 3-Hour Block</Text>
@@ -347,34 +358,34 @@ const styles = StyleSheet.create({
   },
   successPassCard: {
     backgroundColor: COLORS.cardSurface,
-    borderRadius: 18,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: COLORS.availableBorder,
-    padding: 16,
-    marginBottom: 16,
+    padding: 14,
+    marginBottom: 14,
     shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   passHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   passBadge: {
     backgroundColor: COLORS.availableBg,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 5,
   },
   passBadgeText: {
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.availableText,
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   passStatusTag: {
     flexDirection: 'row',
@@ -389,7 +400,7 @@ const styles = StyleSheet.create({
   },
   passStatusText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.availableText,
   },
   passBody: {
@@ -397,34 +408,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: COLORS.cardSurfaceAlt,
-    padding: 12,
-    borderRadius: 12,
+    padding: 10,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   passLabel: {
-    fontSize: 9,
-    fontWeight: '800',
+    fontSize: 8.5,
+    fontWeight: '700',
     color: COLORS.textMuted,
     letterSpacing: 0.5,
   },
   passPlate: {
-    fontSize: 18,
-    fontWeight: '900',
+    fontSize: 16,
+    fontWeight: '800',
     color: COLORS.textDark,
     letterSpacing: 0.8,
     marginTop: 2,
   },
   passTime: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: COLORS.textMuted,
-    marginTop: 3,
+    marginTop: 2,
   },
   passBayBox: {
     backgroundColor: COLORS.primarySubtle,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
     alignItems: 'center',
   },
   passBayLabel: {
@@ -433,75 +444,75 @@ const styles = StyleSheet.create({
     color: COLORS.primaryDark,
   },
   passBayValue: {
-    fontSize: 16,
-    fontWeight: '900',
+    fontSize: 15,
+    fontWeight: '800',
     color: COLORS.primaryDark,
   },
   passActionBtn: {
     backgroundColor: COLORS.primary,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 10,
   },
   passActionBtnText: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '700',
     letterSpacing: 0.2,
   },
   platePreviewSection: {
-    marginBottom: 14,
+    marginBottom: 12,
   },
   sectionHeader: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.textMuted,
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     marginBottom: 6,
   },
   plateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#CBD5E1',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    borderColor: '#0F172A',
+    paddingVertical: 7,
+    paddingHorizontal: 10,
     shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
     elevation: 2,
   },
   plateBlueStrip: {
     backgroundColor: '#1E3A8A',
-    paddingVertical: 5,
-    paddingHorizontal: 7,
-    borderRadius: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 8,
   },
   plateInd: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '900',
   },
   plateChakra: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: '#60A5FA',
-    marginTop: 2,
+    marginTop: 1,
   },
   plateNumberBox: {
     flex: 1,
   },
   plateNumberText: {
-    fontSize: 19,
-    fontWeight: '900',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#0F172A',
     letterSpacing: 1.5,
   },
@@ -510,61 +521,65 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   plateSecurityBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.primarySubtle,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  plateSecurityText: {
-    fontSize: 11,
   },
   presetsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 8,
+    marginTop: 6,
     flexWrap: 'wrap',
   },
   presetsLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.textMuted,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   presetChip: {
     backgroundColor: COLORS.cardSurface,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3.5,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+  presetChipActive: {
+    backgroundColor: COLORS.primarySubtle,
+    borderColor: COLORS.primary,
+  },
   presetChipText: {
     fontSize: 10,
+    color: COLORS.textSlate,
+    fontWeight: '700',
+  },
+  presetChipTextActive: {
     color: COLORS.primaryDark,
-    fontWeight: '800',
   },
   formCard: {
     backgroundColor: COLORS.cardSurface,
-    borderRadius: 18,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 16,
+    padding: 14,
     shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   inputLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11.5,
+    fontWeight: '700',
     color: COLORS.textDark,
-    marginBottom: 6,
+    marginBottom: 5,
   },
   required: {
     color: COLORS.occupied,
@@ -573,16 +588,16 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.inputBg,
     borderWidth: 1.5,
     borderColor: COLORS.inputBorder,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 15,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 14,
     color: COLORS.textDark,
     fontWeight: '700',
     letterSpacing: 0.8,
   },
   inputHint: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: COLORS.textMuted,
     marginTop: 4,
   },
@@ -590,32 +605,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   refreshText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10.5,
+    fontWeight: '600',
     color: COLORS.primary,
   },
   strategyOption: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.cardSurfaceAlt,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 12,
-    marginBottom: 10,
-    gap: 12,
+    padding: 10,
+    marginBottom: 8,
+    gap: 10,
   },
   strategyOptionSelected: {
     borderColor: COLORS.primary,
     backgroundColor: COLORS.primarySubtle,
   },
   radioDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     borderWidth: 2,
     borderColor: COLORS.inputBorder,
   },
@@ -629,75 +644,75 @@ const styles = StyleSheet.create({
   strategyTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   strategyTitle: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   recommendedPill: {
-    backgroundColor: 'rgba(13, 148, 136, 0.2)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: 'rgba(13, 148, 136, 0.18)',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
     borderRadius: 4,
   },
   recommendedPillText: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: '800',
     color: COLORS.primaryDark,
   },
   strategySub: {
     fontSize: 10,
     color: COLORS.textMuted,
-    marginTop: 2,
+    marginTop: 1,
   },
   subLabel: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: COLORS.textMuted,
-    fontWeight: '700',
-    marginTop: 4,
-    marginBottom: 8,
+    fontWeight: '600',
+    marginTop: 3,
+    marginBottom: 6,
   },
   noSlotsWarningBox: {
-    padding: 10,
+    padding: 8,
     backgroundColor: COLORS.occupiedBg,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   noSlotsWarningText: {
     fontSize: 11,
     color: COLORS.occupiedText,
-    fontWeight: '800',
+    fontWeight: '700',
     textAlign: 'center',
   },
   baysWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   baySelectChip: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.cardSurfaceAlt,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 7,
     borderWidth: 1,
     borderColor: COLORS.border,
-    gap: 5,
+    gap: 4,
   },
   baySelectChipSelected: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
   bayDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   baySelectChipText: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '700',
     color: COLORS.textSlate,
   },
   baySelectChipTextSelected: {
@@ -706,31 +721,28 @@ const styles = StyleSheet.create({
   tariffCard: {
     flexDirection: 'row',
     backgroundColor: COLORS.cardSurfaceAlt,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 12,
+    padding: 10,
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 16,
+    gap: 8,
+    marginBottom: 14,
   },
   tariffIconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     backgroundColor: COLORS.primarySubtle,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tariffIcon: {
-    fontSize: 12,
   },
   tariffTexts: {
     flex: 1,
   },
   tariffTitle: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11.5,
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   tariffSub: {
@@ -740,13 +752,13 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 12,
+    borderRadius: 10,
     alignItems: 'center',
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
     elevation: 3,
   },
   submitBtnDisabled: {
@@ -759,8 +771,8 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 13,
+    fontWeight: '700',
     letterSpacing: 0.2,
   },
 });

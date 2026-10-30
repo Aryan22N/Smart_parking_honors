@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS } from '../constants/colors';
+import { Icon } from './Icon';
 
 interface HeaderProps {
   title: string;
@@ -32,12 +33,13 @@ export const Header: React.FC<HeaderProps> = ({
                 <Text style={styles.statusText}>{badge}</Text>
               </View>
             </View>
-            <Text style={styles.brandTagline}>SMART MANAGEMENT</Text>
+            <Text style={styles.brandTagline}>SMART PARKING PLATFORM</Text>
           </View>
         </View>
 
         {rightActionText && onRightAction && (
           <TouchableOpacity style={styles.actionBtn} onPress={onRightAction} activeOpacity={0.75}>
+            <Icon name="refresh" size={12} color={COLORS.primaryLight} />
             <Text style={styles.actionBtnText}>{rightActionText}</Text>
           </TouchableOpacity>
         )}
@@ -54,9 +56,9 @@ export const Header: React.FC<HeaderProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.navyHeader,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 16,
+    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   brandGroup: {
     flexDirection: 'row',
@@ -72,22 +74,17 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   brandLogo: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 3,
   },
   brandLogoText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '900',
+    fontSize: 16,
+    fontWeight: '800',
     letterSpacing: -0.5,
   },
   titleLine: {
@@ -96,8 +93,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   brandName: {
-    fontSize: 16,
-    fontWeight: '900',
+    fontSize: 15,
+    fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.3,
   },
@@ -105,11 +102,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 12,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: 'rgba(16, 185, 129, 0.25)',
     gap: 4,
   },
   statusDot: {
@@ -120,43 +117,46 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.primaryLight,
     letterSpacing: 0.5,
   },
   brandTagline: {
     fontSize: 8,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.textSubtle,
     letterSpacing: 0.8,
     marginTop: 1,
   },
   actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   actionBtnText: {
     color: COLORS.primaryLight,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   pageTitleContainer: {
     marginTop: 2,
   },
   pageTitle: {
-    fontSize: 22,
-    fontWeight: '900',
+    fontSize: 20,
+    fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
   pageSubtitle: {
     fontSize: 12,
     color: '#94A3B8',
-    marginTop: 3,
+    marginTop: 2,
     lineHeight: 16,
   },
 });

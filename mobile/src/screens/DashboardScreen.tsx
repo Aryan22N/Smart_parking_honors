@@ -13,6 +13,7 @@ import { Header } from '../components/Header';
 import { OccupancyGauge } from '../components/OccupancyGauge';
 import { StatCard } from '../components/StatCard';
 import { EmptyState } from '../components/EmptyState';
+import { Icon } from '../components/Icon';
 import { slotsApi, sessionsApi, reportsApi } from '../api/endpoints';
 import { SlotAvailabilitySummary, ParkingSession, DailyRevenue } from '../types';
 import { formatCurrency, formatTimeOnly } from '../utils/formatting';
@@ -89,7 +90,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         title="Dashboard"
         subtitle="Facility overview & real-time operations"
         badge="ONLINE"
-        rightActionText="Sync ⟳"
+        rightActionText="Sync"
         onRightAction={fetchData}
       />
 
@@ -103,7 +104,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         {error && (
           <View style={styles.errorCard}>
             <View style={styles.errorIconBox}>
-              <Text style={styles.errorIcon}>⚠️</Text>
+              <Icon name="alert" size={14} color={COLORS.occupiedText} />
             </View>
             <View style={styles.errorContent}>
               <Text style={styles.errorTitle}>Connection Notice</Text>
@@ -123,7 +124,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             activeOpacity={0.85}
           >
             <View style={styles.actionIconCircle}>
-              <Text style={styles.actionIconText}>+</Text>
+              <Icon name="entry" size={16} color="#FFFFFF" />
             </View>
             <View style={styles.actionTexts}>
               <Text style={styles.actionPrimaryTitle}>Vehicle Entry</Text>
@@ -136,8 +137,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             onPress={onNavigateToActive}
             activeOpacity={0.85}
           >
-            <View style={[styles.actionIconCircle, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
-              <Text style={styles.actionIconText}>⚡</Text>
+            <View style={styles.actionIconCircleNavy}>
+              <Icon name="clock" size={15} color="#FFFFFF" />
             </View>
             <View style={styles.actionTexts}>
               <Text style={styles.actionSecondaryTitle}>Checkout</Text>
@@ -154,7 +155,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           occupancyPercent={availability.occupancyRatePercent}
         />
 
-        {/* Statistic Cards Layout */}
+        {/* Balanced 2x2 Statistics Matrix */}
         <View style={styles.statsDeck}>
           <View style={styles.statsRow}>
             <StatCard
@@ -162,14 +163,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               value={availability.availableSlots}
               variant="available"
               subValue="Ready to park"
-              icon="✓"
+              iconName="check"
             />
             <StatCard
               label="Occupied Bays"
               value={availability.occupiedSlots}
               variant="occupied"
               subValue="Vehicles parked"
-              icon="🚗"
+              iconName="car"
             />
           </View>
 
@@ -179,7 +180,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               value={availability.totalSlots}
               variant="default"
               subValue="All facility bays"
-              icon="🅿"
+              iconName="bays"
             />
             <TouchableOpacity
               style={styles.revenueStatCard}
@@ -191,14 +192,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 <View style={styles.revenueHeaderRow}>
                   <Text style={styles.revenueLabel}>TODAY'S REVENUE</Text>
                   <View style={styles.revenueIconBox}>
-                    <Text style={styles.revenueIcon}>💰</Text>
+                    <Icon name="revenue" size={11} color={COLORS.primaryDark} />
                   </View>
                 </View>
                 <Text style={styles.revenueAmount}>
                   {formatCurrency(todayRevenue?.totalFinalizedCharges ?? 0)}
                 </Text>
-                <Text style={styles.revenueSub}>
-                  {todayRevenue?.completedSessionsCount ?? 0} Completed Checkouts →
+                <Text style={styles.revenueSub} numberOfLines={1}>
+                  {todayRevenue?.completedSessionsCount ?? 0} Checkouts →
                 </Text>
               </View>
             </TouchableOpacity>
@@ -221,9 +222,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {activeSessions.length === 0 ? (
           <EmptyState
-            icon="🅿"
+            iconName="bays"
             title="All Bays Vacant"
-            description="There are currently no active parked vehicles in the facility. Check-in a vehicle to monitor elapsed time."
+            description="There are currently no active parked vehicles in the facility. Check-in a vehicle to monitor duration."
             actionLabel="+ Register Vehicle Entry"
             onAction={onNavigateToBook}
           />
@@ -260,13 +261,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         {/* View All Slots Grid Shortcut */}
         <TouchableOpacity style={styles.slotsShortcutCard} onPress={onNavigateToSlots} activeOpacity={0.85}>
           <View style={styles.shortcutIconBox}>
-            <Text style={styles.shortcutIcon}>🗺️</Text>
+            <Icon name="map" size={16} color={COLORS.primaryDark} />
           </View>
           <View style={styles.shortcutTexts}>
             <Text style={styles.shortcutTitle}>View Parking Bay Layout</Text>
             <Text style={styles.shortcutSub}>Visual grid of all {availability.totalSlots} parking bays</Text>
           </View>
-          <Text style={styles.shortcutArrow}>→</Text>
+          <Icon name="arrow-right" size={14} color={COLORS.textMuted} />
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -290,8 +291,8 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   loadingTitle: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '700',
     color: COLORS.textDark,
     marginTop: 14,
   },
@@ -303,7 +304,7 @@ const styles = StyleSheet.create({
   errorCard: {
     flexDirection: 'row',
     backgroundColor: COLORS.occupiedBg,
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.occupiedBorder,
     padding: 12,
@@ -312,22 +313,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorIconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 6,
     backgroundColor: 'rgba(225, 29, 72, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  errorIcon: {
-    fontSize: 13,
   },
   errorContent: {
     flex: 1,
   },
   errorTitle: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.occupiedText,
   },
   errorText: {
@@ -345,61 +343,64 @@ const styles = StyleSheet.create({
   },
   retryBtnText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.occupiedText,
   },
   quickActionDeck: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 8,
+    gap: 10,
+    marginBottom: 6,
   },
   actionBtnEntry: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 14,
+    padding: 12,
     gap: 10,
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 2,
   },
   actionBtnCheckout: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.navyHeader,
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 14,
+    padding: 12,
     gap: 10,
     shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
   },
   actionIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionIconText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#FFFFFF',
+  actionIconCircleNavy: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionTexts: {
     flex: 1,
   },
   actionPrimaryTitle: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   actionPrimarySub: {
@@ -409,7 +410,7 @@ const styles = StyleSheet.create({
   },
   actionSecondaryTitle: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   actionSecondarySub: {
@@ -429,15 +430,16 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 100,
     backgroundColor: COLORS.cardSurface,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
     overflow: 'hidden',
     shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
+    justifyContent: 'space-between',
   },
   revenueAccentBar: {
     height: 3,
@@ -445,42 +447,41 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   revenueCardContent: {
-    padding: 14,
+    padding: 12,
   },
   revenueHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   revenueLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: COLORS.textMuted,
     letterSpacing: 0.5,
+    flex: 1,
+    marginRight: 4,
   },
   revenueIconBox: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
+    width: 22,
+    height: 22,
+    borderRadius: 6,
     backgroundColor: COLORS.primarySubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  revenueIcon: {
-    fontSize: 11,
-  },
   revenueAmount: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '800',
     color: COLORS.primaryDark,
     letterSpacing: -0.5,
   },
   revenueSub: {
     fontSize: 10,
     color: COLORS.primary,
-    fontWeight: '700',
-    marginTop: 4,
+    fontWeight: '600',
+    marginTop: 3,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -495,19 +496,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '900',
+    fontSize: 15,
+    fontWeight: '800',
     color: COLORS.textDark,
   },
   countBadge: {
     backgroundColor: COLORS.primarySubtle,
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   countBadgeText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.primaryDark,
   },
   seeAllText: {
@@ -520,45 +521,46 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: COLORS.cardSurface,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 14,
+    padding: 12,
     marginBottom: 8,
     shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   sessionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   bayBadge: {
-    backgroundColor: COLORS.cardSurfaceAlt,
+    backgroundColor: COLORS.primarySubtle,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderColor: 'rgba(13, 148, 136, 0.2)',
+    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     alignItems: 'center',
   },
   bayBadgeLabel: {
     fontSize: 8,
     fontWeight: '800',
-    color: COLORS.textMuted,
+    color: COLORS.primaryDark,
   },
   bayBadgeNumber: {
-    fontSize: 13,
-    fontWeight: '900',
+    fontSize: 12,
+    fontWeight: '800',
     color: COLORS.primaryDark,
   },
   vehicleNumber: {
-    fontSize: 15,
-    fontWeight: '900',
+    fontSize: 14,
+    fontWeight: '700',
     color: COLORS.textDark,
+    letterSpacing: 0.3,
   },
   entryTime: {
     fontSize: 11,
@@ -570,57 +572,49 @@ const styles = StyleSheet.create({
   },
   durationBadge: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
     color: COLORS.primary,
     backgroundColor: COLORS.primarySubtle,
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 5,
   },
   feeEstimate: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '800',
     color: COLORS.textDark,
-    marginTop: 3,
+    marginTop: 2,
   },
   slotsShortcutCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.cardSurface,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 14,
-    marginTop: 6,
-    gap: 12,
+    padding: 12,
+    marginTop: 4,
+    gap: 10,
   },
   shortcutIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: COLORS.cardSurfaceAlt,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: COLORS.primarySubtle,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  shortcutIcon: {
-    fontSize: 18,
   },
   shortcutTexts: {
     flex: 1,
   },
   shortcutTitle: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   shortcutSub: {
     fontSize: 11,
     color: COLORS.textMuted,
     marginTop: 1,
-  },
-  shortcutArrow: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: COLORS.textMuted,
   },
 });

@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { COLORS } from '../constants/colors';
+import { Icon } from './Icon';
 import { Invoice } from '../types';
 import { formatCurrency, formatDateTime } from '../utils/formatting';
 import { sessionsApi } from '../api/endpoints';
@@ -61,7 +62,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
             <View style={styles.receiptTop}>
               <View style={styles.brandGroup}>
                 <View style={styles.brandIconBox}>
-                  <Text style={styles.brandIconText}>P</Text>
+                  <Icon name="bays" size={16} color="#FFFFFF" />
                 </View>
                 <View>
                   <Text style={styles.companyName}>ParkEase Facility 1</Text>
@@ -69,8 +70,8 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                 </View>
               </View>
 
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.75}>
-                <Text style={styles.closeBtnText}>✕</Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.75} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Icon name="close" size={12} color={COLORS.textSlate} />
               </TouchableOpacity>
             </View>
 
@@ -168,7 +169,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                 {updatingPayment ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.payBtnText}>Verify & Mark as PAID</Text>
+                  <View style={styles.payBtnRow}>
+                    <Icon name="check" size={14} color="#FFFFFF" />
+                    <Text style={styles.payBtnText}>Verify & Mark as PAID</Text>
+                  </View>
                 )}
               </TouchableOpacity>
             )}
@@ -417,6 +421,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 3,
+  },
+  payBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   payBtnText: {
     color: '#FFFFFF',
