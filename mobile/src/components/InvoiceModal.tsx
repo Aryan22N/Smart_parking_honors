@@ -40,7 +40,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
       invoice.paymentStatus = 'PAID';
       Alert.alert(
         'Payment Settled',
-        `Payment of ${formatCurrency(invoice.totalFee)} has been successfully verified & recorded.`
+        `Payment of ${formatCurrency(invoice.totalFee)} has been verified and recorded.`
       );
       if (onPaymentSuccess) {
         onPaymentSuccess();
@@ -57,33 +57,33 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
       <View style={styles.overlay}>
         <View style={styles.modalCard}>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollBody}>
-            {/* Top Receipt Bar */}
+            {/* Modal Header */}
             <View style={styles.receiptTop}>
-              <View style={styles.brandBadge}>
-                <View style={styles.brandIcon}>
-                  <Text style={styles.brandIconText}>🅿</Text>
+              <View style={styles.brandGroup}>
+                <View style={styles.brandIconBox}>
+                  <Text style={styles.brandIconText}>P</Text>
                 </View>
                 <View>
-                  <Text style={styles.companyName}>SMART PARKING FACILITY</Text>
-                  <Text style={styles.receiptType}>OFFICIAL PARKING TAX INVOICE</Text>
+                  <Text style={styles.companyName}>ParkEase Facility 1</Text>
+                  <Text style={styles.receiptType}>PARKING TAX INVOICE</Text>
                 </View>
               </View>
 
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+              <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.75}>
                 <Text style={styles.closeBtnText}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Invoice Ref & Status Stamp */}
+            {/* Reference & Status */}
             <View style={styles.refRow}>
               <View>
-                <Text style={styles.refLabel}>INVOICE NUMBER</Text>
+                <Text style={styles.refLabel}>INVOICE REF</Text>
                 <Text style={styles.refValue}>#{invoice.invoiceNumber}</Text>
               </View>
 
               <View
                 style={[
-                  styles.statusStamp,
+                  styles.statusBadge,
                   {
                     backgroundColor: isUnpaid ? COLORS.warningBg : COLORS.availableBg,
                     borderColor: isUnpaid ? COLORS.warningBorder : COLORS.availableBorder,
@@ -98,7 +98,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                 />
                 <Text
                   style={[
-                    styles.statusStampText,
+                    styles.statusText,
                     { color: isUnpaid ? COLORS.warningText : COLORS.availableText },
                   ]}
                 >
@@ -108,74 +108,56 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
             </View>
 
             {/* Vehicle Stencil Card */}
-            <View style={styles.plateContainer}>
+            <View style={styles.vehiclePlateCard}>
               <View style={styles.plateBlueStrip}>
                 <Text style={styles.plateInd}>IND</Text>
-                <View style={styles.plateHoloCircle} />
               </View>
               <View style={styles.plateNumberBox}>
                 <Text style={styles.plateNumberText}>{invoice.vehicleNumber}</Text>
               </View>
-              <View style={styles.plateSlotPill}>
-                <Text style={styles.plateSlotLabel}>BAY</Text>
-                <Text style={styles.plateSlotValue}>{invoice.slotNumber}</Text>
+              <View style={styles.slotTag}>
+                <Text style={styles.slotTagLabel}>BAY</Text>
+                <Text style={styles.slotTagValue}>{invoice.slotNumber}</Text>
               </View>
             </View>
 
-            {/* Perforated Dotted Divider */}
-            <View style={styles.perforationRow}>
-              <View style={styles.perforatedCutLeft} />
-              <View style={styles.dottedLine} />
-              <View style={styles.perforatedCutRight} />
-            </View>
-
-            {/* Session Timeline Details */}
+            {/* Timeline Breakdown */}
             <View style={styles.timelineSection}>
-              <Text style={styles.sectionHeader}>BILLING TIMELINE</Text>
+              <Text style={styles.sectionTitle}>BILLING DETAILS</Text>
 
-              <View style={styles.timelineItem}>
-                <View style={styles.timelineDot} />
-                <View style={styles.timelineContent}>
-                  <Text style={styles.timelineLabel}>Entry Check-In</Text>
-                  <Text style={styles.timelineVal}>{formatDateTime(invoice.entryTime)}</Text>
-                </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Entry Check-In</Text>
+                <Text style={styles.infoValue}>{formatDateTime(invoice.entryTime)}</Text>
               </View>
 
-              <View style={styles.timelineConnector} />
-
-              <View style={styles.timelineItem}>
-                <View style={[styles.timelineDot, { backgroundColor: COLORS.cyanLight }]} />
-                <View style={styles.timelineContent}>
-                  <Text style={styles.timelineLabel}>Exit Checkout</Text>
-                  <Text style={styles.timelineVal}>{formatDateTime(invoice.exitTime)}</Text>
-                </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Exit Checkout</Text>
+                <Text style={styles.infoValue}>{formatDateTime(invoice.exitTime)}</Text>
               </View>
 
-              <View style={styles.metricSummaryGrid}>
-                <View style={styles.metricSummaryCard}>
-                  <Text style={styles.summaryLabel}>Billed Duration</Text>
-                  <Text style={styles.summaryVal}>{invoice.durationFormatted}</Text>
-                  <Text style={styles.summarySub}>({invoice.durationSeconds}s elapsed)</Text>
-                </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Billed Duration</Text>
+                <Text style={[styles.infoValue, { color: COLORS.primaryDark, fontWeight: '800' }]}>
+                  {invoice.durationFormatted}
+                </Text>
+              </View>
 
-                <View style={styles.metricSummaryCard}>
-                  <Text style={styles.summaryLabel}>Tariff Policy</Text>
-                  <Text style={styles.summaryVal}>₹50 / Block</Text>
-                  <Text style={styles.summarySub}>(3h block rounding)</Text>
-                </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Tariff Rule</Text>
+                <Text style={styles.infoValue}>₹50 / started 3h block</Text>
               </View>
             </View>
 
-            {/* Total Fee Callout */}
-            <View style={styles.amountBox}>
-              <View style={styles.amountLeft}>
-                <Text style={styles.amountSubtext}>FINAL AMOUNT CHARGED</Text>
-                <Text style={styles.currencyNote}>Inclusive of all parking taxes</Text>
+            {/* Amount Due Box */}
+            <View style={styles.totalBox}>
+              <View>
+                <Text style={styles.totalLabel}>TOTAL AMOUNT DUE</Text>
+                <Text style={styles.totalSub}>Taxes and tariffs included</Text>
               </View>
-              <Text style={styles.amountValue}>{formatCurrency(invoice.totalFee)}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(invoice.totalFee)}</Text>
             </View>
 
-            {/* Action Buttons */}
+            {/* Actions */}
             {isUnpaid && (
               <TouchableOpacity
                 style={styles.payBtn}
@@ -186,13 +168,13 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                 {updatingPayment ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.payBtnText}>Verify & Settle Payment Now</Text>
+                  <Text style={styles.payBtnText}>Verify & Mark as PAID</Text>
                 )}
               </TouchableOpacity>
             )}
 
             <TouchableOpacity style={styles.closeActionBtn} onPress={onClose} activeOpacity={0.8}>
-              <Text style={styles.closeActionBtnText}>Close Receipt</Text>
+              <Text style={styles.closeActionBtnText}>Close Invoice</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -204,25 +186,25 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 8, 16, 0.85)',
+    backgroundColor: 'rgba(11, 19, 43, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
   },
   modalCard: {
     width: '100%',
-    maxWidth: 420,
-    maxHeight: '90%',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 24,
+    maxWidth: 400,
+    maxHeight: '88%',
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: COLORS.border,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 8,
   },
   scrollBody: {
     padding: 20,
@@ -233,316 +215,226 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 16,
   },
-  brandBadge: {
+  brandGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  brandIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
+  brandIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   brandIconText: {
+    color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: '900',
   },
   companyName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '900',
-    color: COLORS.textPrimary,
-    letterSpacing: 0.5,
+    color: COLORS.textDark,
   },
   receiptType: {
-    fontSize: 10,
-    color: COLORS.primaryLight,
-    fontWeight: '700',
-    marginTop: 2,
-    letterSpacing: 0.5,
+    fontSize: 9,
+    fontWeight: '800',
+    color: COLORS.primary,
+    letterSpacing: 0.6,
+    marginTop: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.cardBgElevated,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
   closeBtnText: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
+    fontSize: 12,
+    color: COLORS.textSlate,
     fontWeight: '700',
   },
   refRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    backgroundColor: COLORS.cardSurfaceAlt,
     padding: 12,
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   refLabel: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 9,
+    fontWeight: '800',
     color: COLORS.textMuted,
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   refValue: {
     fontSize: 13,
     fontWeight: '800',
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
     marginTop: 2,
   },
-  statusStamp: {
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
-    gap: 6,
+    gap: 5,
   },
   statusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
   },
-  statusStampText: {
-    fontSize: 11,
+  statusText: {
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.5,
   },
-  plateContainer: {
+  vehiclePlateCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    borderColor: '#CBD5E1',
+    paddingVertical: 7,
+    paddingHorizontal: 10,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
   },
   plateBlueStrip: {
     backgroundColor: '#1E3A8A',
     paddingVertical: 4,
     paddingHorizontal: 6,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 4,
     marginRight: 8,
   },
   plateInd: {
     color: '#FFFFFF',
     fontSize: 8,
     fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  plateHoloCircle: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#60A5FA',
-    marginTop: 2,
   },
   plateNumberBox: {
     flex: 1,
   },
   plateNumberText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '900',
     color: '#0F172A',
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
   },
-  plateSlotPill: {
-    backgroundColor: COLORS.cardBgElevated,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+  slotTag: {
+    backgroundColor: COLORS.primarySubtle,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
     alignItems: 'center',
   },
-  plateSlotLabel: {
+  slotTagLabel: {
     fontSize: 8,
-    fontWeight: '700',
-    color: COLORS.primaryLight,
+    fontWeight: '800',
+    color: COLORS.primaryDark,
   },
-  plateSlotValue: {
+  slotTagValue: {
     fontSize: 12,
     fontWeight: '900',
-    color: COLORS.textPrimary,
-  },
-  perforationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 14,
-    position: 'relative',
-  },
-  perforatedCutLeft: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: COLORS.bgPrimary,
-    marginLeft: -26,
-  },
-  dottedLine: {
-    flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderLight,
-    borderStyle: 'dashed',
-    marginHorizontal: 10,
-  },
-  perforatedCutRight: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: COLORS.bgPrimary,
-    marginRight: -26,
+    color: COLORS.primaryDark,
   },
   timelineSection: {
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: COLORS.textMuted,
-    letterSpacing: 0.8,
-    marginBottom: 12,
-  },
-  timelineItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  timelineDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.available,
-  },
-  timelineConnector: {
-    width: 2,
-    height: 14,
-    backgroundColor: COLORS.border,
-    marginLeft: 3,
-    marginVertical: 2,
-  },
-  timelineContent: {
-    flex: 1,
-  },
-  timelineLabel: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    fontWeight: '600',
-  },
-  timelineVal: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginTop: 1,
-  },
-  metricSummaryGrid: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 14,
-  },
-  metricSummaryCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    padding: 10,
+    backgroundColor: COLORS.cardSurfaceAlt,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
+    padding: 12,
+    marginBottom: 14,
+    gap: 8,
   },
-  summaryLabel: {
+  sectionTitle: {
     fontSize: 10,
-    color: COLORS.textSecondary,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 0.6,
+    marginBottom: 2,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: COLORS.textMuted,
     fontWeight: '600',
   },
-  summaryVal: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    marginTop: 3,
+  infoValue: {
+    fontSize: 11,
+    color: COLORS.textDark,
+    fontWeight: '700',
   },
-  summarySub: {
+  totalBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: COLORS.primarySubtle,
+    borderWidth: 1,
+    borderColor: COLORS.primaryLight,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+  },
+  totalLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.primaryDark,
+    letterSpacing: 0.4,
+  },
+  totalSub: {
     fontSize: 10,
     color: COLORS.textMuted,
     marginTop: 2,
   },
-  amountBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(99, 102, 241, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.25)',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 16,
-  },
-  amountLeft: {
-    flex: 1,
-  },
-  amountSubtext: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: COLORS.primaryLight,
-    letterSpacing: 0.5,
-  },
-  currencyNote: {
-    fontSize: 10,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  amountValue: {
-    fontSize: 26,
+  totalValue: {
+    fontSize: 24,
     fontWeight: '900',
-    color: COLORS.available,
-    letterSpacing: -0.5,
+    color: COLORS.primaryDark,
   },
   payBtn: {
     backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: 13,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 10,
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
   },
   payBtnText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.3,
   },
   closeActionBtn: {
-    backgroundColor: COLORS.cardBgElevated,
-    paddingVertical: 12,
-    borderRadius: 14,
+    backgroundColor: COLORS.cardSurfaceAlt,
+    paddingVertical: 11,
+    borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   closeActionBtnText: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
+    color: COLORS.textSlate,
+    fontSize: 12,
     fontWeight: '700',
   },
 });

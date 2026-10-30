@@ -1,51 +1,66 @@
 export const COLORS = {
-  // Backgrounds - Luxury Dark Obsidian & Slate
-  bgPrimary: '#0A0F1D',      // Deep obsidian void
-  bgSecondary: '#0F172A',    // Deep slate layer
-  bgSurface: '#131D35',      // Card surface
-  cardBg: '#131D35',         // Primary card background
-  cardBgElevated: '#1E2B4D', // Elevated / hovered card surface
-  cardBgGlass: 'rgba(19, 29, 53, 0.85)', // Glassmorphic card
-  inputBg: '#090E1A',        // Dark sunken input background
+  // Brand Identity - ParkEase
+  brandName: 'ParkEase',
+  brandTagline: 'Smart Parking Management',
 
-  // Brand Accents - Electric Indigo & Vivid Cyan
-  primary: '#6366F1',        // Electric Indigo
-  primaryDark: '#4F46E5',    // Deep Indigo
-  primaryLight: '#818CF8',   // Soft Violet Indigo
-  primaryGlow: 'rgba(99, 102, 241, 0.25)', // Indigo ambient glow
-  
-  cyan: '#06B6D4',           // High-tech Cyan
-  cyanLight: '#38BDF8',      // Vivid Sky Blue
-  cyanGlow: 'rgba(6, 182, 212, 0.25)',
+  // Deep Navy / Charcoal Backgrounds
+  navyHeader: '#0B132B',       // Executive Deep Navy
+  navyDark: '#070D1E',         // Darkest Charcoal
+  navySurface: '#131D38',      // Elevated Navy
+  navyMuted: '#1E294B',        // Muted Charcoal Navy
 
-  // Status Indicators - Emerald & Crimson
-  available: '#10B981',      // Emerald Green
-  availableBg: 'rgba(16, 185, 129, 0.12)', // Subtle green glow
-  availableBorder: '#059669', // Darker green outline
-  availableText: '#34D399',  // Bright green text
+  // Content Canvas & Light Surfaces
+  canvasBg: '#F1F5F9',         // Crisp cool light grey background
+  cardSurface: '#FFFFFF',      // Pure White content surfaces
+  cardSurfaceAlt: '#F8FAFC',   // Subtle light grey surface
+  inputBg: '#FFFFFF',          // Clean white input field
+  inputBorder: '#CBD5E1',      // Slate input border
 
-  occupied: '#F43F5E',       // Vivid Crimson Rose
-  occupiedBg: 'rgba(244, 63, 94, 0.12)', // Subtle red glow
-  occupiedBorder: '#E11D48',  // Darker red outline
-  occupiedText: '#FB7185',   // Bright rose text
+  // Teal & Emerald Accents
+  primary: '#0D9488',          // ParkEase Signature Deep Teal
+  primaryDark: '#0F766E',      // Dark Teal
+  primaryLight: '#14B8A6',     // Vibrant Teal Accent
+  primarySubtle: '#CCFBF1',    // Soft Teal Background Tint
+  primaryGlow: 'rgba(13, 148, 136, 0.2)',
 
-  warning: '#F59E0B',        // Solar Amber
-  warningBg: 'rgba(245, 158, 11, 0.12)', // Subtle amber container
-  warningBorder: '#D97706',  // Amber outline
-  warningText: '#FBBF24',
+  // Emerald & Status Indicators
+  available: '#059669',        // Rich Emerald Green
+  availableBg: '#D1FAE5',      // Light Mint / Emerald tint
+  availableBorder: '#10B981',  // Emerald border
+  availableText: '#065F46',    // Dark emerald text for readability on light bg
 
-  // Typography Palette
-  textPrimary: '#F8FAFC',    // Pure crisp white
-  textSecondary: '#94A3B8',  // Cool metallic slate
-  textMuted: '#64748B',      // Dimmed supporting text
-  textInverse: '#0A0F1D',    // Contrast dark text for bright buttons
+  occupied: '#E11D48',         // Vivid Rose / Crimson
+  occupiedBg: '#FFE4E6',       // Light Crimson tint
+  occupiedBorder: '#F43F5E',   // Crimson border
+  occupiedText: '#9F1239',     // Dark crimson text
+
+  warning: '#D97706',          // Warm Amber
+  warningBg: '#FEF3C7',        // Light Amber tint
+  warningBorder: '#F59E0B',    // Amber border
+  warningText: '#92400E',      // Dark amber text
+
+  // Typography Colors (Optimized for High Readability)
+  textDark: '#0F172A',         // Rich Charcoal (Primary text on light surfaces)
+  textSlate: '#334155',        // Slate (Secondary text)
+  textMuted: '#64748B',        // Muted / Hint text
+  textLight: '#F8FAFC',        // Crisp white text on dark navy surfaces
+  textSubtle: '#94A3B8',
 
   // Borders & Dividers
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderLight: 'rgba(255, 255, 255, 0.15)',
-  borderActive: '#6366F1',
+  border: '#E2E8F0',           // Light card border
+  borderLight: '#F1F5F9',      // Extra light divider
+  borderDark: 'rgba(255, 255, 255, 0.1)', // Subtle border on navy header
 
-  // Status Badges
-  paid: '#10B981',
-  unpaid: '#F59E0B',
+  // Shadows
+  shadowColor: '#0F172A',
+
+  // Compatibility Mappings (Ensure no breaking changes in existing imports)
+  bgPrimary: '#0B132B',        // Matches navyHeader for root container
+  bgSecondary: '#F1F5F9',
+  cardBg: '#FFFFFF',           // Modern White content surface
+  cardBgElevated: '#F8FAFC',
+  textPrimary: '#0F172A',
+  textSecondary: '#475569',
+  paid: '#059669',
+  unpaid: '#D97706',
 };

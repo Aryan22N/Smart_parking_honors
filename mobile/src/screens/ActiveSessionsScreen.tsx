@@ -74,7 +74,7 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
       );
       Alert.alert(
         'Fare Estimation Updated',
-        `Vehicle: ${estimation.vehicleNumber}\n• Elapsed: ${estimation.durationFormatted}\n• Chargeable Blocks: ${estimation.billableBlocks} (${estimation.ratePerBlockInr} INR/block)\n• Estimated Fee: ${formatCurrency(estimation.estimatedFee)}`
+        `Vehicle: ${estimation.vehicleNumber}\n• Duration: ${estimation.durationFormatted}\n• Chargeable Blocks: ${estimation.billableBlocks} (${estimation.ratePerBlockInr} INR/block)\n• Estimated Fee: ${formatCurrency(estimation.estimatedFee)}`
       );
     } catch (err: any) {
       Alert.alert('Recalculation Failed', err.message || 'Could not recalculate fare.');
@@ -85,17 +85,17 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
 
   const handleCheckoutPrompt = (session: ParkingSession) => {
     Alert.alert(
-      `Check Out Vehicle: ${session.vehicleNumber}`,
-      `Allocated Bay: ${session.slotNumber}\nCurrent Estimated Fee: ${formatCurrency(session.totalFee)}\n\nSelect checkout settlement method:`,
+      `Check Out Vehicle`,
+      `Vehicle: ${session.vehicleNumber}\nBay: ${session.slotNumber}\nRunning Fee: ${formatCurrency(session.totalFee)}\n\nSelect checkout settlement:`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Checkout (Unpaid / Pay Later)',
+          text: 'Checkout (Pay Later)',
           style: 'default',
           onPress: () => performCheckout(session.id, false),
         },
         {
-          text: 'Checkout & Mark PAID',
+          text: 'Checkout & Pay Now',
           style: 'default',
           onPress: () => performCheckout(session.id, true),
         },
@@ -132,7 +132,7 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Polling active telemetry...</Text>
+        <Text style={styles.loadingText}>Loading active sessions...</Text>
       </View>
     );
   }
@@ -147,26 +147,26 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
         onRightAction={fetchActiveSessions}
       />
 
-      {/* Overview Accrued Metrics Strip */}
-      <View style={styles.telemetryBar}>
-        <View style={styles.telemetryItem}>
-          <Text style={styles.telemetryLabel}>ACTIVE VEHICLES</Text>
-          <Text style={styles.telemetryValue}>{sessions.length} Parked</Text>
+      {/* Summary Telemetry Strip */}
+      <View style={styles.summaryStrip}>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>PARKED VEHICLES</Text>
+          <Text style={styles.summaryValue}>{sessions.length} Active</Text>
         </View>
 
-        <View style={styles.telemetryDivider} />
+        <View style={styles.summaryDivider} />
 
-        <View style={styles.telemetryItem}>
-          <Text style={styles.telemetryLabel}>RUNNING ESTIMATED CHARGES</Text>
-          <Text style={[styles.telemetryValue, { color: COLORS.available }]}>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>ESTIMATED ACCRUED FEES</Text>
+          <Text style={[styles.summaryValue, { color: COLORS.primaryDark }]}>
             {formatCurrency(totalRunningAccrued)}
           </Text>
         </View>
       </View>
 
-      {/* Search Input Bar */}
+      {/* Search Filter Bar */}
       {sessions.length > 0 && (
-        <View style={styles.searchContainer}>
+        <View style={styles.searchBarBox}>
           <TextInput
             style={styles.searchInput}
             placeholder="Search by license plate or bay (e.g. MH12 or A-01)..."
@@ -176,8 +176,8 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
             autoCapitalize="characters"
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
-              <Text style={styles.clearSearchText}>✕</Text>
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
+              <Text style={styles.clearBtnText}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -193,13 +193,13 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
         {filteredSessions.length === 0 ? (
           <EmptyState
             icon="⏱️"
-            title={sessions.length === 0 ? 'No Active Parking Sessions' : 'No Matching Vehicles'}
+            title={sessions.length === 0 ? 'No Active Sessions' : 'No Matching Vehicles'}
             description={
               sessions.length === 0
-                ? 'All parking bays are currently vacant. Vehicles checked in will appear here with live duration tracking.'
-                : `No active sessions match "${searchQuery}". Clear your search query to see all active sessions.`
+                ? 'All parking bays are vacant. Check in a vehicle from the entry gate to track duration here.'
+                : `No active sessions match "${searchQuery}". Reset search to see all active parked vehicles.`
             }
-            actionLabel={sessions.length === 0 ? '+ Register Vehicle Check-In' : 'Clear Search Filter'}
+            actionLabel={sessions.length === 0 ? '+ Register Vehicle Check-In' : 'Clear Filter'}
             onAction={sessions.length === 0 ? onNavigateToBook : () => setSearchQuery('')}
           />
         ) : (
@@ -209,48 +209,48 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
 
             return (
               <View key={session.id} style={styles.sessionCard}>
-                {/* Header Row: Bay Badge, Plate Number, In-Time */}
+                {/* Header Row */}
                 <View style={styles.cardHeader}>
                   <View style={styles.bayBadge}>
                     <Text style={styles.bayBadgeLabel}>BAY</Text>
-                    <Text style={styles.bayBadgeNumber}>{session.slotNumber}</Text>
+                    <Text style={styles.bayBadgeValue}>{session.slotNumber}</Text>
                   </View>
 
-                  <View style={styles.vehicleDetails}>
-                    <Text style={styles.plateNumber}>{session.vehicleNumber}</Text>
-                    <Text style={styles.entryTime}>
-                      Checked-in at {formatTimeOnly(session.entryTime)}
+                  <View style={styles.vehicleInfo}>
+                    <Text style={styles.plateText}>{session.vehicleNumber}</Text>
+                    <Text style={styles.entryTimeText}>
+                      Parked at {formatTimeOnly(session.entryTime)}
                     </Text>
                   </View>
 
                   <View style={styles.feeCallout}>
-                    <Text style={styles.feeLabel}>ESTIMATED FARE</Text>
-                    <Text style={styles.feeValue}>{formatCurrency(session.totalFee)}</Text>
+                    <Text style={styles.feeCalloutLabel}>ESTIMATED</Text>
+                    <Text style={styles.feeCalloutValue}>{formatCurrency(session.totalFee)}</Text>
                   </View>
                 </View>
 
-                {/* Metrics Breakdown Grid */}
+                {/* Metrics Details */}
                 <View style={styles.metricsBox}>
                   <View style={styles.metricItem}>
-                    <Text style={styles.metricLabel}>ELAPSED DURATION</Text>
-                    <Text style={styles.metricVal}>{session.durationFormatted}</Text>
+                    <Text style={styles.metricLabel}>ELAPSED TIME</Text>
+                    <Text style={styles.metricValue}>{session.durationFormatted}</Text>
                   </View>
 
                   <View style={styles.metricItem}>
                     <Text style={styles.metricLabel}>TARIFF POLICY</Text>
-                    <Text style={styles.metricVal}>₹50 / 3-hr block</Text>
+                    <Text style={styles.metricValue}>₹50 / 3h block</Text>
                   </View>
 
                   <View style={styles.metricItem}>
                     <Text style={styles.metricLabel}>STATUS</Text>
-                    <View style={styles.activePill}>
-                      <View style={styles.activeDot} />
-                      <Text style={styles.activePillText}>{session.status}</Text>
+                    <View style={styles.statusPill}>
+                      <View style={styles.statusDot} />
+                      <Text style={styles.statusPillText}>IN PROGRESS</Text>
                     </View>
                   </View>
                 </View>
 
-                {/* Card Actions */}
+                {/* Actions Row */}
                 <View style={styles.cardActions}>
                   <TouchableOpacity
                     style={styles.recalcBtn}
@@ -259,9 +259,9 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
                     activeOpacity={0.8}
                   >
                     {isRecalculating ? (
-                      <ActivityIndicator size="small" color={COLORS.primaryLight} />
+                      <ActivityIndicator size="small" color={COLORS.primary} />
                     ) : (
-                      <Text style={styles.recalcBtnText}>Refresh Fee ⟳</Text>
+                      <Text style={styles.recalcBtnText}>Recalculate ⟳</Text>
                     )}
                   </TouchableOpacity>
 
@@ -298,11 +298,11 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: COLORS.canvasBg,
   },
   center: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: COLORS.canvasBg,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -310,123 +310,121 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 14,
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     fontWeight: '600',
   },
-  telemetryBar: {
+  summaryStrip: {
     flexDirection: 'row',
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.cardSurface,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     alignItems: 'center',
   },
-  telemetryItem: {
+  summaryItem: {
     flex: 1,
   },
-  telemetryDivider: {
+  summaryDivider: {
     width: 1,
     height: 24,
     backgroundColor: COLORS.border,
     marginHorizontal: 16,
   },
-  telemetryLabel: {
+  summaryLabel: {
     fontSize: 10,
     fontWeight: '800',
     color: COLORS.textMuted,
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
-  telemetryValue: {
+  summaryValue: {
     fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
+    fontWeight: '900',
+    color: COLORS.textDark,
     marginTop: 2,
   },
-  searchContainer: {
+  searchBarBox: {
     paddingHorizontal: 16,
     paddingTop: 12,
     position: 'relative',
   },
   searchInput: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 14,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 13,
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
     fontWeight: '600',
   },
-  clearSearchBtn: {
+  clearBtn: {
     position: 'absolute',
     right: 26,
     top: 20,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: COLORS.cardBgElevated,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  clearSearchText: {
-    color: COLORS.textSecondary,
-    fontSize: 11,
+  clearBtnText: {
+    color: COLORS.textSlate,
+    fontSize: 10,
     fontWeight: '800',
   },
   content: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 36,
   },
   sessionCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   bayBadge: {
-    backgroundColor: COLORS.cardBgElevated,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: COLORS.primarySubtle,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   bayBadgeLabel: {
     fontSize: 8,
     fontWeight: '800',
-    color: COLORS.textMuted,
+    color: COLORS.primaryDark,
   },
-  bayBadgeNumber: {
-    fontSize: 14,
+  bayBadgeValue: {
+    fontSize: 13,
     fontWeight: '900',
-    color: COLORS.cyanLight,
+    color: COLORS.primaryDark,
   },
-  vehicleDetails: {
+  vehicleInfo: {
     flex: 1,
   },
-  plateNumber: {
+  plateText: {
     fontSize: 16,
     fontWeight: '900',
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
     letterSpacing: 0.5,
   },
-  entryTime: {
+  entryTimeText: {
     fontSize: 11,
     color: COLORS.textMuted,
     marginTop: 2,
@@ -434,26 +432,26 @@ const styles = StyleSheet.create({
   feeCallout: {
     alignItems: 'flex-end',
   },
-  feeLabel: {
+  feeCalloutLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: COLORS.primaryLight,
-    letterSpacing: 0.6,
+    color: COLORS.primary,
+    letterSpacing: 0.5,
   },
-  feeValue: {
-    fontSize: 18,
+  feeCalloutValue: {
+    fontSize: 17,
     fontWeight: '900',
-    color: COLORS.available,
+    color: COLORS.primaryDark,
     marginTop: 1,
   },
   metricsBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: 12,
+    backgroundColor: COLORS.cardSurfaceAlt,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 10,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   metricItem: {
     flex: 1,
@@ -462,28 +460,28 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     color: COLORS.textMuted,
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
-  metricVal: {
+  metricValue: {
     fontSize: 12,
     fontWeight: '800',
-    color: COLORS.textPrimary,
-    marginTop: 3,
+    color: COLORS.textDark,
+    marginTop: 2,
   },
-  activePill: {
+  statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 3,
+    marginTop: 2,
   },
-  activeDot: {
+  statusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: COLORS.warning,
   },
-  activePillText: {
-    fontSize: 11,
+  statusPillText: {
+    fontSize: 10,
     fontWeight: '800',
     color: COLORS.warningText,
   },
@@ -493,36 +491,36 @@ const styles = StyleSheet.create({
   },
   recalcBtn: {
     flex: 1,
-    backgroundColor: COLORS.cardBgElevated,
-    paddingVertical: 11,
-    borderRadius: 12,
+    backgroundColor: COLORS.cardSurfaceAlt,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: COLORS.border,
   },
   recalcBtnText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    color: COLORS.cyanLight,
+    color: COLORS.primaryDark,
   },
   checkoutBtn: {
     flex: 1.5,
     backgroundColor: COLORS.primary,
-    paddingVertical: 11,
-    borderRadius: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
     elevation: 3,
   },
   checkoutBtnText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 });

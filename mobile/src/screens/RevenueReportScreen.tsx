@@ -37,7 +37,7 @@ export const RevenueReportScreen: React.FC = () => {
       const data = await reportsApi.getDailyRevenue(date);
       setRevenue(data);
     } catch (err: any) {
-      Alert.alert('Financial Report Error', err.message || 'Could not fetch revenue metrics.');
+      Alert.alert('Report Error', err.message || 'Could not fetch daily revenue.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -75,7 +75,7 @@ export const RevenueReportScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Header
-        title="Financial Intel"
+        title="Revenue Intel"
         subtitle="Finalized collections, payment settlement & billing compliance"
         badge="AUDITED"
         rightActionText="Sync ⟳"
@@ -132,7 +132,7 @@ export const RevenueReportScreen: React.FC = () => {
               maxLength={10}
             />
             <TouchableOpacity style={styles.applyBtn} onPress={handleApplyCustomDate} activeOpacity={0.8}>
-              <Text style={styles.applyBtnText}>Load Date</Text>
+              <Text style={styles.applyBtnText}>Load</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -140,13 +140,13 @@ export const RevenueReportScreen: React.FC = () => {
         {loading ? (
           <View style={styles.centerCard}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Compiling audited revenue records for {selectedDate}...</Text>
+            <Text style={styles.loadingText}>Compiling revenue records for {selectedDate}...</Text>
           </View>
         ) : hasNoSessions ? (
           <EmptyState
             icon="📊"
             title={`No Finalized Billings on ${selectedDate}`}
-            description="Revenue calculations are compiled exclusively from finalized vehicle checkouts. Active parking fees are reflected upon exit."
+            description="Revenue calculations are compiled exclusively from completed vehicle checkouts. Active parking fees will appear here once vehicles exit."
             actionLabel="View Today's Report"
             onAction={() => {
               const today = getTodayIso();
@@ -160,7 +160,7 @@ export const RevenueReportScreen: React.FC = () => {
             <View style={styles.heroRevenueCard}>
               <View style={styles.heroTopRow}>
                 <View>
-                  <Text style={styles.heroLabel}>GROSS FINALIZED CHARGES</Text>
+                  <Text style={styles.heroLabel}>GROSS FINALIZED REVENUE</Text>
                   <Text style={styles.heroAmount}>{formatCurrency(totalCharges)}</Text>
                 </View>
                 <View style={styles.dateTag}>
@@ -174,14 +174,14 @@ export const RevenueReportScreen: React.FC = () => {
                   <View style={[styles.progressBarFill, { width: `${collectionRate}%` }]} />
                 </View>
                 <View style={styles.progressLabels}>
-                  <Text style={styles.progressRateText}>{collectionRate}% Settlement Efficiency</Text>
+                  <Text style={styles.progressRateText}>{collectionRate}% Collection Efficiency</Text>
                   <Text style={styles.progressCompletedText}>{sessionCount} Checkouts</Text>
                 </View>
               </View>
 
               <View style={styles.heroFooter}>
                 <Text style={styles.heroFooterText}>
-                  Aggregated from {sessionCount} completed vehicle {sessionCount === 1 ? 'exit' : 'exits'}
+                  Compiled from {sessionCount} completed vehicle {sessionCount === 1 ? 'exit' : 'exits'}
                 </Text>
                 <Text style={styles.heroCurrencyText}>Currency: {revenue?.currency ?? 'INR'}</Text>
               </View>
@@ -192,12 +192,12 @@ export const RevenueReportScreen: React.FC = () => {
               <View style={styles.metricCard}>
                 <View style={styles.metricCardHeader}>
                   <View style={[styles.statusDot, { backgroundColor: COLORS.available }]} />
-                  <Text style={styles.metricCardLabel}>PAID REVENUE</Text>
+                  <Text style={styles.metricCardLabel}>PAID SETTLEMENTS</Text>
                 </View>
-                <Text style={[styles.metricCardValue, { color: COLORS.available }]}>
+                <Text style={[styles.metricCardValue, { color: COLORS.availableText }]}>
                   {formatCurrency(paidCharges)}
                 </Text>
-                <Text style={styles.metricCardSub}>Successfully verified</Text>
+                <Text style={styles.metricCardSub}>Verified payments</Text>
               </View>
 
               <View style={styles.metricCard}>
@@ -205,17 +205,17 @@ export const RevenueReportScreen: React.FC = () => {
                   <View style={[styles.statusDot, { backgroundColor: COLORS.warning }]} />
                   <Text style={styles.metricCardLabel}>OUTSTANDING</Text>
                 </View>
-                <Text style={[styles.metricCardValue, { color: COLORS.warning }]}>
+                <Text style={[styles.metricCardValue, { color: COLORS.warningText }]}>
                   {formatCurrency(outstandingCharges)}
                 </Text>
-                <Text style={styles.metricCardSub}>Pending collection</Text>
+                <Text style={styles.metricCardSub}>Pending settlement</Text>
               </View>
             </View>
 
             {/* Operational Unit Economics Deck */}
             <View style={styles.economicsCard}>
               <Text style={styles.economicsTitle}>UNIT ECONOMICS</Text>
-              
+
               <View style={styles.economicsRow}>
                 <View style={styles.econItem}>
                   <Text style={styles.econLabel}>Average Ticket Size</Text>
@@ -223,7 +223,7 @@ export const RevenueReportScreen: React.FC = () => {
                 </View>
                 <View style={styles.econDivider} />
                 <View style={styles.econItem}>
-                  <Text style={styles.econLabel}>Completed Checkouts</Text>
+                  <Text style={styles.econLabel}>Checkouts</Text>
                   <Text style={styles.econVal}>{sessionCount}</Text>
                 </View>
                 <View style={styles.econDivider} />
@@ -240,11 +240,11 @@ export const RevenueReportScreen: React.FC = () => {
                 <Text style={styles.policyIcon}>📋</Text>
               </View>
               <View style={styles.policyContent}>
-                <Text style={styles.policyTitle}>Tariff Policy Verification</Text>
+                <Text style={styles.policyTitle}>Tariff Rules & Billing Logic</Text>
                 <Text style={styles.policyText}>
                   • Base rate: ₹50.00 per started 3-hour block (10,800 seconds).{'\n'}
-                  • Rounding: Ceiling block round-up on partial block usage.{'\n'}
-                  • Active sessions are billed in real time upon final checkout.
+                  • Partial blocks are rounded up to the nearest full block upon exit.{'\n'}
+                  • Revenue reflects finalized checkouts. Active parking fees are accrued live.
                 </Text>
               </View>
             </View>
@@ -258,19 +258,24 @@ export const RevenueReportScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: COLORS.canvasBg,
   },
   content: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 36,
   },
   dateSelectorContainer: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 14,
-    marginBottom: 14,
+    marginBottom: 12,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   quickDateRow: {
     flexDirection: 'row',
@@ -279,7 +284,7 @@ const styles = StyleSheet.create({
   },
   quickDateBtn: {
     flex: 1,
-    backgroundColor: COLORS.cardBgElevated,
+    backgroundColor: COLORS.cardSurfaceAlt,
     paddingVertical: 8,
     borderRadius: 10,
     alignItems: 'center',
@@ -287,16 +292,16 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   quickDateBtnActive: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    backgroundColor: COLORS.primarySubtle,
     borderColor: COLORS.primary,
   },
   quickDateText: {
     fontSize: 12,
     fontWeight: '700',
-    color: COLORS.textSecondary,
+    color: COLORS.textSlate,
   },
   quickDateTextActive: {
-    color: COLORS.primaryLight,
+    color: COLORS.primaryDark,
     fontWeight: '800',
   },
   customDateBox: {
@@ -307,19 +312,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.inputBg,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 12,
+    borderColor: COLORS.inputBorder,
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 13,
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
   applyBtn: {
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -329,8 +334,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   centerCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 18,
     padding: 32,
     alignItems: 'center',
     borderWidth: 1,
@@ -340,7 +345,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 14,
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -348,16 +353,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   heroRevenueCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 3,
+    padding: 16,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   heroTopRow: {
     flexDirection: 'row',
@@ -367,56 +372,54 @@ const styles = StyleSheet.create({
   heroLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: COLORS.primaryLight,
-    letterSpacing: 0.8,
+    color: COLORS.primary,
+    letterSpacing: 0.6,
   },
   heroAmount: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: '900',
-    color: COLORS.available,
+    color: COLORS.primaryDark,
     letterSpacing: -0.5,
-    marginTop: 4,
+    marginTop: 3,
   },
   dateTag: {
-    backgroundColor: COLORS.cardBgElevated,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: COLORS.primarySubtle,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   dateTagText: {
     fontSize: 11,
     fontWeight: '800',
-    color: COLORS.cyanLight,
+    color: COLORS.primaryDark,
   },
   progressContainer: {
-    marginVertical: 14,
+    marginVertical: 12,
   },
   progressBarBg: {
-    height: 8,
-    backgroundColor: COLORS.inputBg,
-    borderRadius: 4,
+    height: 7,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 3.5,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: COLORS.available,
-    borderRadius: 4,
+    backgroundColor: COLORS.primary,
+    borderRadius: 3.5,
   },
   progressLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 6,
+    marginTop: 5,
   },
   progressRateText: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.availableText,
+    color: COLORS.primaryDark,
   },
   progressCompletedText: {
     fontSize: 11,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     fontWeight: '600',
   },
   heroFooter: {
@@ -442,11 +445,16 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 18,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 14,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   metricCardHeader: {
     flexDirection: 'row',
@@ -463,31 +471,36 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: COLORS.textMuted,
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   metricCardValue: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '900',
     letterSpacing: -0.5,
   },
   metricCardSub: {
     fontSize: 10,
     color: COLORS.textMuted,
-    marginTop: 4,
+    marginTop: 3,
   },
   economicsCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 18,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 16,
+    padding: 14,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   economicsTitle: {
     fontSize: 10,
     fontWeight: '800',
-    color: COLORS.primaryLight,
-    letterSpacing: 0.8,
-    marginBottom: 12,
+    color: COLORS.primary,
+    letterSpacing: 0.6,
+    marginBottom: 10,
   },
   economicsRow: {
     flexDirection: 'row',
@@ -499,7 +512,7 @@ const styles = StyleSheet.create({
   },
   econDivider: {
     width: 1,
-    height: 28,
+    height: 26,
     backgroundColor: COLORS.border,
   },
   econLabel: {
@@ -507,33 +520,33 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.textMuted,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   econVal: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
   },
   policyCard: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: 18,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 14,
-    gap: 12,
+    gap: 10,
     alignItems: 'flex-start',
   },
   policyIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: COLORS.cardBgElevated,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: COLORS.primarySubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   policyIcon: {
-    fontSize: 14,
+    fontSize: 13,
   },
   policyContent: {
     flex: 1,
@@ -541,12 +554,12 @@ const styles = StyleSheet.create({
   policyTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
     marginBottom: 4,
   },
   policyText: {
     fontSize: 11,
-    color: COLORS.textSecondary,
+    color: COLORS.textSlate,
     lineHeight: 16,
   },
 });

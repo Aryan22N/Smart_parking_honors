@@ -75,7 +75,7 @@ export const HistoryScreen: React.FC = () => {
       setActiveInvoice(invoice);
       setInvoiceModalVisible(true);
     } catch (err: any) {
-      Alert.alert('Invoice Fetch Error', err.message || 'Failed to fetch invoice.');
+      Alert.alert('Invoice Error', err.message || 'Failed to fetch invoice.');
     }
   };
 
@@ -103,7 +103,7 @@ export const HistoryScreen: React.FC = () => {
 
             <View>
               <Text style={styles.plateNumber}>{item.vehicleNumber}</Text>
-              <Text style={styles.sessionId}>Audit ID: #{item.id}</Text>
+              <Text style={styles.sessionId}>Session ID: #{item.id}</Text>
             </View>
           </View>
 
@@ -145,7 +145,7 @@ export const HistoryScreen: React.FC = () => {
           </View>
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>Duration:</Text>
-            <Text style={[styles.timeVal, { color: COLORS.cyanLight }]}>
+            <Text style={[styles.timeVal, { color: COLORS.primaryDark, fontWeight: '800' }]}>
               {item.durationFormatted}
             </Text>
           </View>
@@ -154,7 +154,7 @@ export const HistoryScreen: React.FC = () => {
         {/* Footer with Final Charge & Invoice Action */}
         <View style={styles.cardFooter}>
           <View>
-            <Text style={styles.feeLabel}>SETTLED AMOUNT</Text>
+            <Text style={styles.feeLabel}>FINAL AMOUNT</Text>
             <Text style={styles.feeAmount}>{formatCurrency(item.totalFee)}</Text>
           </View>
 
@@ -175,7 +175,7 @@ export const HistoryScreen: React.FC = () => {
       <Header
         title="Session Ledger"
         subtitle="Audited history of completed checkouts and billing invoices"
-        badge="ARCHIVE"
+        badge="LEDGER"
         rightActionText="Sync ⟳"
         onRightAction={() => fetchHistory(0, false)}
       />
@@ -185,7 +185,7 @@ export const HistoryScreen: React.FC = () => {
         <View style={styles.searchBarContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search history by plate, bay, or session ID..."
+            placeholder="Search by license plate, bay, or ID..."
             placeholderTextColor={COLORS.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -202,7 +202,7 @@ export const HistoryScreen: React.FC = () => {
       {loading && history.length === 0 ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Retrieving audit records...</Text>
+          <Text style={styles.loadingText}>Retrieving session ledger...</Text>
         </View>
       ) : (
         <FlatList
@@ -218,11 +218,11 @@ export const HistoryScreen: React.FC = () => {
           ListEmptyComponent={
             <EmptyState
               icon="📜"
-              title={history.length === 0 ? 'No Completed Sessions Yet' : 'No Matching Records'}
+              title={history.length === 0 ? 'No Historical Records' : 'No Matching Sessions'}
               description={
                 history.length === 0
-                  ? 'There are no completed parking sessions in the facility database. Check out an active session to see records logged here.'
-                  : `No historical checkouts match "${searchQuery}". Clear your search query to see all records.`
+                  ? 'There are no completed parking sessions in the facility database yet. Checked out vehicles will appear here.'
+                  : `No past checkouts match "${searchQuery}". Clear your search query to see all records.`
               }
               actionLabel={history.length > 0 ? 'Clear Search' : undefined}
               onAction={history.length > 0 ? () => setSearchQuery('') : undefined}
@@ -253,18 +253,18 @@ export const HistoryScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: COLORS.canvasBg,
   },
   center: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: COLORS.canvasBg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
     marginTop: 14,
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     fontWeight: '600',
   },
   searchBarContainer: {
@@ -273,117 +273,114 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   searchInput: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 14,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
     fontSize: 13,
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
     fontWeight: '600',
   },
   clearSearchBtn: {
     position: 'absolute',
     right: 26,
     top: 20,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: COLORS.cardBgElevated,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   clearSearchText: {
-    color: COLORS.textSecondary,
-    fontSize: 11,
+    color: COLORS.textSlate,
+    fontSize: 10,
     fontWeight: '800',
   },
   listContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 36,
   },
   card: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
+    padding: 14,
+    marginBottom: 10,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   cardHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   bayBadge: {
-    backgroundColor: COLORS.cardBgElevated,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
+    backgroundColor: COLORS.primarySubtle,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
   bayBadgeLabel: {
     fontSize: 8,
     fontWeight: '800',
-    color: COLORS.textMuted,
+    color: COLORS.primaryDark,
   },
   bayBadgeValue: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '900',
-    color: COLORS.cyanLight,
+    color: COLORS.primaryDark,
   },
   plateNumber: {
     fontSize: 15,
     fontWeight: '900',
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
     letterSpacing: 0.5,
   },
   sessionId: {
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.textMuted,
-    marginTop: 2,
+    marginTop: 1,
   },
   paymentBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
     borderWidth: 1,
-    gap: 6,
+    gap: 4,
   },
   paymentDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   paymentBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.5,
   },
   timelineBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: 12,
+    backgroundColor: COLORS.cardSurfaceAlt,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 10,
-    gap: 4,
-    marginBottom: 12,
+    gap: 3,
+    marginBottom: 10,
   },
   timeRow: {
     flexDirection: 'row',
@@ -396,8 +393,8 @@ const styles = StyleSheet.create({
   },
   timeVal: {
     fontSize: 11,
-    color: COLORS.textSecondary,
-    fontWeight: '700',
+    color: COLORS.textSlate,
+    fontWeight: '600',
   },
   cardFooter: {
     flexDirection: 'row',
@@ -405,43 +402,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    paddingTop: 10,
+    paddingTop: 8,
   },
   feeLabel: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '800',
     color: COLORS.textMuted,
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   feeAmount: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
-    color: COLORS.available,
+    color: COLORS.primaryDark,
     marginTop: 1,
   },
   invoiceBtn: {
-    backgroundColor: COLORS.cardBgElevated,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    backgroundColor: COLORS.cardSurfaceAlt,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: COLORS.border,
   },
   invoiceBtnText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
   },
   loadingMoreBox: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 14,
+    paddingVertical: 12,
   },
   loadingMoreText: {
     fontSize: 11,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     fontWeight: '600',
   },
 });

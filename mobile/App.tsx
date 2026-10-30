@@ -23,7 +23,6 @@ interface NavItemConfig {
   id: TabType;
   label: string;
   icon: string;
-  badge?: string;
 }
 
 export default function App() {
@@ -89,12 +88,12 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
-      
-      {/* Active Screen View */}
+
+      {/* Screen View */}
       <View style={styles.contentContainer}>{renderScreen()}</View>
 
-      {/* Floating Modern Dock Navigation Bar */}
-      <View style={styles.dockWrapper}>
+      {/* ParkEase Executive Bottom Navigation Bar */}
+      <View style={styles.navWrapper}>
         <View style={styles.bottomNav}>
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
@@ -105,7 +104,7 @@ export default function App() {
                 onPress={() => setActiveTab(item.id)}
                 activeOpacity={0.8}
               >
-                <View style={[styles.iconWrapper, isActive && styles.iconWrapperActive]}>
+                <View style={[styles.iconBox, isActive && styles.iconBoxActive]}>
                   <Text style={[styles.navIcon, isActive && styles.navIconActive]}>
                     {item.icon}
                   </Text>
@@ -125,55 +124,47 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: COLORS.navyHeader,
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   contentContainer: {
     flex: 1,
+    backgroundColor: COLORS.canvasBg,
   },
-  dockWrapper: {
-    backgroundColor: COLORS.bgPrimary,
-    paddingHorizontal: 12,
-    paddingBottom: Platform.OS === 'ios' ? 14 : 8,
-    paddingTop: 4,
+  navWrapper: {
+    backgroundColor: COLORS.navyHeader,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 8,
+    paddingTop: 6,
+    paddingBottom: Platform.OS === 'ios' ? 16 : 8,
   },
   bottomNav: {
     flexDirection: 'row',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 8,
+    justifyContent: 'space-around',
+    alignItems: 'center',
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 4,
-    borderRadius: 14,
+    borderRadius: 12,
   },
   navItemActive: {
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    backgroundColor: 'rgba(13, 148, 136, 0.18)',
   },
-  iconWrapper: {
-    width: 32,
-    height: 28,
+  iconBox: {
+    width: 28,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: 6,
   },
-  iconWrapperActive: {
-    backgroundColor: 'rgba(99, 102, 241, 0.22)',
-  },
+  iconBoxActive: {},
   navIcon: {
-    fontSize: 16,
-    opacity: 0.6,
+    fontSize: 15,
+    opacity: 0.65,
   },
   navIconActive: {
     opacity: 1,
@@ -181,7 +172,7 @@ const styles = StyleSheet.create({
   navLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.textMuted,
+    color: '#94A3B8',
     marginTop: 2,
     letterSpacing: 0.2,
   },

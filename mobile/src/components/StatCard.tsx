@@ -21,37 +21,37 @@ export const StatCard: React.FC<StatCardProps> = ({
     switch (variant) {
       case 'primary':
         return {
-          accent: COLORS.primaryLight,
-          border: 'rgba(99, 102, 241, 0.3)',
-          badgeBg: 'rgba(99, 102, 241, 0.12)',
-          defaultIcon: '⚡',
+          accent: COLORS.primary,
+          badgeBg: COLORS.primarySubtle,
+          badgeText: COLORS.primaryDark,
+          defaultIcon: '🅿',
         };
       case 'available':
         return {
           accent: COLORS.available,
-          border: 'rgba(16, 185, 129, 0.3)',
           badgeBg: COLORS.availableBg,
+          badgeText: COLORS.availableText,
           defaultIcon: '✓',
         };
       case 'occupied':
         return {
           accent: COLORS.occupied,
-          border: 'rgba(244, 63, 94, 0.3)',
           badgeBg: COLORS.occupiedBg,
+          badgeText: COLORS.occupiedText,
           defaultIcon: '🚗',
         };
       case 'warning':
         return {
           accent: COLORS.warning,
-          border: 'rgba(245, 158, 11, 0.3)',
           badgeBg: COLORS.warningBg,
-          defaultIcon: '⚠️',
+          badgeText: COLORS.warningText,
+          defaultIcon: '⚡',
         };
       default:
         return {
-          accent: COLORS.cyanLight,
-          border: COLORS.border,
-          badgeBg: 'rgba(255, 255, 255, 0.05)',
+          accent: COLORS.textSlate,
+          badgeBg: '#F1F5F9',
+          badgeText: COLORS.textSlate,
           defaultIcon: '📊',
         };
     }
@@ -60,15 +60,19 @@ export const StatCard: React.FC<StatCardProps> = ({
   const theme = getTheme();
 
   return (
-    <View style={[styles.card, { borderColor: theme.border }]}>
-      <View style={styles.headerRow}>
-        <Text style={styles.label}>{label}</Text>
-        <View style={[styles.iconContainer, { backgroundColor: theme.badgeBg }]}>
-          <Text style={styles.iconText}>{icon || theme.defaultIcon}</Text>
+    <View style={styles.card}>
+      <View style={[styles.topAccentBar, { backgroundColor: theme.accent }]} />
+      <View style={styles.content}>
+        <View style={styles.headerRow}>
+          <Text style={styles.label}>{label}</Text>
+          <View style={[styles.iconBox, { backgroundColor: theme.badgeBg }]}>
+            <Text style={styles.iconText}>{icon || theme.defaultIcon}</Text>
+          </View>
         </View>
+
+        <Text style={[styles.value, { color: theme.accent }]}>{value}</Text>
+        {subValue ? <Text style={styles.subValue}>{subValue}</Text> : null}
       </View>
-      <Text style={[styles.value, { color: theme.accent }]}>{value}</Text>
-      {subValue ? <Text style={styles.subValue}>{subValue}</Text> : null}
     </View>
   );
 };
@@ -77,15 +81,23 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     minWidth: 100,
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.cardSurface,
     borderRadius: 16,
-    padding: 14,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    borderColor: COLORS.border,
+    overflow: 'hidden',
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
     shadowRadius: 6,
-    elevation: 3,
+    elevation: 2,
+  },
+  topAccentBar: {
+    height: 3,
+    width: '100%',
+  },
+  content: {
+    padding: 14,
   },
   headerRow: {
     flexDirection: 'row',
@@ -96,15 +108,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
     flex: 1,
   },
-  iconContainer: {
+  iconBox: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -117,9 +129,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   subValue: {
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.textMuted,
     marginTop: 4,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

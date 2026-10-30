@@ -51,7 +51,7 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
       const data = await slotsApi.getAvailable();
       setAvailableSlots(data);
     } catch {
-      // Silently catch or handle
+      // Silently catch
     } finally {
       setLoadingSlots(false);
     }
@@ -68,7 +68,7 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
   const handleSubmit = async () => {
     const trimmed = vehicleNumber.trim();
     if (!trimmed) {
-      Alert.alert('Validation Error', 'Please enter a vehicle registration number.');
+      Alert.alert('Validation Notice', 'Please enter a vehicle registration number to proceed.');
       return;
     }
 
@@ -77,7 +77,7 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
     if (!indianRegex.test(cleanReg)) {
       Alert.alert(
         'Invalid Vehicle Format',
-        'Please enter a valid Indian vehicle registration number.\n\nExamples:\n• MH12AB1234\n• KA 01 MJ 9876\n• DL-02-C-5555\n• 22BH1234AA'
+        'Please enter a valid vehicle registration number.\n\nAccepted Formats:\n• MH12AB1234 (Standard State)\n• KA 01 MJ 8888\n• DL-03-C-5555\n• 22BH1234AA (BH Series)'
       );
       return;
     }
@@ -95,7 +95,7 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
       if (onClearInitialSlot) onClearInitialSlot();
       loadAvailableSlots();
     } catch (err: any) {
-      Alert.alert('Booking Error', err.message || 'Failed to book parking session.');
+      Alert.alert('Registration Error', err.message || 'Failed to check in vehicle.');
     } finally {
       setSubmitting(false);
     }
@@ -112,59 +112,52 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
     <View style={styles.container}>
       <Header
         title="Vehicle Check-In"
-        subtitle="Automatic optical registration & optimal bay allocation"
-        badge="ENTRY GATE"
+        subtitle="Register incoming vehicle and allocate parking bay"
+        badge="GATE 1"
       />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Entry Pass Confirmation Card */}
+        {/* Registration Success Pass */}
         {confirmedSession && (
-          <View style={styles.confirmationCard}>
-            <View style={styles.confirmationHeader}>
-              <View style={styles.ticketBadge}>
-                <Text style={styles.ticketBadgeText}>OFFICIAL ENTRY PASS</Text>
+          <View style={styles.successPassCard}>
+            <View style={styles.passHeader}>
+              <View style={styles.passBadge}>
+                <Text style={styles.passBadgeText}>ENTRY PASS ISSUED</Text>
               </View>
-              <View style={styles.successPill}>
-                <View style={styles.successDot} />
-                <Text style={styles.successPillText}>BAY ASSIGNED</Text>
+              <View style={styles.passStatusTag}>
+                <View style={styles.passStatusDot} />
+                <Text style={styles.passStatusText}>BAY LOCKED</Text>
               </View>
             </View>
 
             <View style={styles.passBody}>
-              <View style={styles.passLeft}>
-                <Text style={styles.passLabel}>VEHICLE PLATE</Text>
-                <Text style={styles.passPlateText}>{confirmedSession.vehicleNumber}</Text>
+              <View>
+                <Text style={styles.passLabel}>VEHICLE REGISTRATION</Text>
+                <Text style={styles.passPlate}>{confirmedSession.vehicleNumber}</Text>
                 <Text style={styles.passTime}>
-                  Check-in: {formatDateTime(confirmedSession.entryTime)}
+                  Entry: {formatDateTime(confirmedSession.entryTime)}
                 </Text>
               </View>
 
-              <View style={styles.passRight}>
-                <Text style={styles.passSlotLabel}>BAY CODE</Text>
-                <View style={styles.passSlotCircle}>
-                  <Text style={styles.passSlotText}>{confirmedSession.slotNumber}</Text>
-                </View>
+              <View style={styles.passBayBox}>
+                <Text style={styles.passBayLabel}>BAY</Text>
+                <Text style={styles.passBayValue}>{confirmedSession.slotNumber}</Text>
               </View>
             </View>
 
-            <View style={styles.passTariffBox}>
-              <Text style={styles.passTariffLabel}>BILLING POLICY</Text>
-              <Text style={styles.passTariffText}>₹50 per started 3-hour block</Text>
-            </View>
-
             <TouchableOpacity
-              style={styles.dismissBtn}
+              style={styles.passActionBtn}
               onPress={handleCloseConfirmation}
               activeOpacity={0.85}
             >
-              <Text style={styles.dismissBtnText}>Track in Active Parking →</Text>
+              <Text style={styles.passActionBtnText}>Track in Active Sessions →</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {/* Real-Time Indian License Plate Preview */}
         <View style={styles.platePreviewSection}>
-          <Text style={styles.sectionMicroHeader}>REAL-TIME PLATE SIMULATION (HSRP)</Text>
+          <Text style={styles.sectionHeader}>LICENSE PLATE PREVIEW (HSRP)</Text>
           <View style={styles.plateContainer}>
             <View style={styles.plateBlueStrip}>
               <Text style={styles.plateInd}>IND</Text>
@@ -174,34 +167,34 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
               <Text
                 style={[
                   styles.plateNumberText,
-                  !vehicleNumber.trim() && styles.plateNumberPlaceholder,
+                  !vehicleNumber.trim() && styles.platePlaceholderText,
                 ]}
               >
                 {cleanDisplayPlate}
               </Text>
             </View>
-            <View style={styles.plateSecurityHolo}>
+            <View style={styles.plateSecurityBadge}>
               <Text style={styles.plateSecurityText}>🔒</Text>
             </View>
           </View>
 
-          {/* Quick Preset Samples for Testing */}
-          <View style={styles.sampleChipsRow}>
-            <Text style={styles.sampleChipsLabel}>Presets:</Text>
+          {/* Quick Preset Samples */}
+          <View style={styles.presetsRow}>
+            <Text style={styles.presetsLabel}>Quick Presets:</Text>
             {['MH12AB1234', 'KA01MJ8888', 'DL03CA5555', '22BH1234AA'].map((sample) => (
               <TouchableOpacity
                 key={sample}
-                style={styles.sampleChip}
+                style={styles.presetChip}
                 onPress={() => handleQuickPlateSelect(sample)}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
               >
-                <Text style={styles.sampleChipText}>{sample}</Text>
+                <Text style={styles.presetChipText}>{sample}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* Input Form Card */}
+        {/* Registration Form Card */}
         <View style={styles.formCard}>
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -209,7 +202,7 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
             </Text>
             <TextInput
               style={styles.textInput}
-              placeholder="e.g. MH12AB1234 or 22BH1234AA"
+              placeholder="e.g. MH12AB1234 or KA01MJ8888"
               placeholderTextColor={COLORS.textMuted}
               value={vehicleNumber}
               onChangeText={handleVehicleChange}
@@ -218,70 +211,68 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
               editable={!submitting}
             />
             <Text style={styles.inputHint}>
-              Supports Indian MoRTH standard states (MH, KA, DL, etc.) and BH series.
+              Supports standard Indian state registration formats and BH series.
             </Text>
           </View>
 
-          {/* Bay Selection Preferences */}
+          {/* Bay Selection Options */}
           <View style={styles.inputGroup}>
             <View style={styles.slotChoiceHeader}>
-              <Text style={styles.inputLabel}>Bay Allocation Mode</Text>
+              <Text style={styles.inputLabel}>Bay Allocation Strategy</Text>
               <TouchableOpacity onPress={loadAvailableSlots} disabled={loadingSlots}>
-                <Text style={styles.refreshSlotsText}>
-                  {loadingSlots ? 'Refreshing...' : 'Refresh Bays ⟳'}
+                <Text style={styles.refreshText}>
+                  {loadingSlots ? 'Updating...' : 'Refresh Bays ⟳'}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Option A: Automatic AI Dispatch */}
+            {/* Strategy 1: Automatic AI Assign */}
             <TouchableOpacity
               style={[
-                styles.slotOption,
-                selectedSlotId === null && styles.slotOptionSelected,
+                styles.strategyOption,
+                selectedSlotId === null && styles.strategyOptionSelected,
               ]}
               onPress={() => setSelectedSlotId(null)}
               activeOpacity={0.8}
             >
-              <View style={styles.slotOptionLeft}>
-                <View
-                  style={[
-                    styles.radioCircle,
-                    selectedSlotId === null && styles.radioCircleActive,
-                  ]}
-                />
-                <View style={styles.slotOptionTexts}>
-                  <View style={styles.optTitleRow}>
-                    <Text style={styles.slotOptionTitle}>Smart Auto-Allocation</Text>
-                    <View style={styles.recBadge}>
-                      <Text style={styles.recBadgeText}>RECOMMENDED</Text>
-                    </View>
+              <View
+                style={[
+                  styles.radioDot,
+                  selectedSlotId === null && styles.radioDotActive,
+                ]}
+              />
+              <View style={styles.strategyTexts}>
+                <View style={styles.strategyTitleRow}>
+                  <Text style={styles.strategyTitle}>Automatic Optimal Assignment</Text>
+                  <View style={styles.recommendedPill}>
+                    <Text style={styles.recommendedPillText}>RECOMMENDED</Text>
                   </View>
-                  <Text style={styles.slotOptionSub}>
-                    Optimally assigns the closest vacant bay to entry gate
-                  </Text>
                 </View>
+                <Text style={styles.strategySub}>
+                  ParkEase assigns the closest vacant bay to the entry gate
+                </Text>
               </View>
             </TouchableOpacity>
 
-            {/* Option B: Specific Bay Grid */}
-            <Text style={styles.subHeader}>Or allocate a specific vacant bay:</Text>
+            {/* Strategy 2: Manual Selection from Grid */}
+            <Text style={styles.subLabel}>Or select an available bay manually:</Text>
 
             {loadingSlots ? (
-              <ActivityIndicator color={COLORS.primary} style={{ marginVertical: 12 }} />
+              <ActivityIndicator color={COLORS.primary} style={{ marginVertical: 10 }} />
             ) : availableSlots.length === 0 ? (
-              <View style={styles.noSlotsBanner}>
-                <Text style={styles.noSlotsWarning}>All parking bays are currently occupied!</Text>
+              <View style={styles.noSlotsWarningBox}>
+                <Text style={styles.noSlotsWarningText}>All bays are currently occupied!</Text>
               </View>
             ) : (
-              <View style={styles.baysGrid}>
+              <View style={styles.baysWrap}>
                 {availableSlots.map((slot) => {
                   const isSelected = selectedSlotId === slot.id;
                   return (
                     <TouchableOpacity
                       key={slot.id}
                       style={[
-                        styles.bayChip,
-                        isSelected && styles.bayChipSelected,
+                        styles.baySelectChip,
+                        isSelected && styles.baySelectChipSelected,
                       ]}
                       onPress={() => setSelectedSlotId(slot.id)}
                       activeOpacity={0.8}
@@ -294,8 +285,8 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
                       />
                       <Text
                         style={[
-                          styles.bayChipText,
-                          isSelected && styles.bayChipTextSelected,
+                          styles.baySelectChipText,
+                          isSelected && styles.baySelectChipTextSelected,
                         ]}
                       >
                         {slot.slotNumber}
@@ -307,20 +298,20 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
             )}
           </View>
 
-          {/* Pricing Transparency Banner */}
-          <View style={styles.pricingNotice}>
-            <View style={styles.pricingIconBox}>
-              <Text style={styles.pricingIcon}>ℹ️</Text>
+          {/* Fixed Tariff Policy Note */}
+          <View style={styles.tariffCard}>
+            <View style={styles.tariffIconBox}>
+              <Text style={styles.tariffIcon}>ℹ️</Text>
             </View>
-            <View style={styles.pricingInfo}>
-              <Text style={styles.pricingTitle}>Fixed Tariff: ₹50 / 3-Hour Block</Text>
-              <Text style={styles.pricingSub}>
-                Rounded up to the nearest 3-hour increment upon vehicle exit.
+            <View style={styles.tariffTexts}>
+              <Text style={styles.tariffTitle}>Standard Tariff: ₹50 / 3-Hour Block</Text>
+              <Text style={styles.tariffSub}>
+                Fee is calculated in 3-hour increments rounded up upon checkout.
               </Text>
             </View>
           </View>
 
-          {/* Submit Button */}
+          {/* Submit Action Button */}
           <TouchableOpacity
             style={[
               styles.submitBtn,
@@ -333,10 +324,10 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
             {submitting ? (
               <View style={styles.submittingRow}>
                 <ActivityIndicator color="#FFFFFF" size="small" />
-                <Text style={styles.submitBtnText}>Allocating Bay & Registering...</Text>
+                <Text style={styles.submitBtnText}>Allocating Bay & Check-In...</Text>
               </View>
             ) : (
-              <Text style={styles.submitBtnText}>Complete Check-In & Allocate Bay</Text>
+              <Text style={styles.submitBtnText}>Check In Vehicle & Allocate Bay</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -348,55 +339,55 @@ export const VehicleEntryScreen: React.FC<VehicleEntryScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: COLORS.canvasBg,
   },
   content: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 36,
   },
-  confirmationCard: {
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-    borderRadius: 20,
+  successPassCard: {
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-    padding: 18,
+    borderColor: COLORS.availableBorder,
+    padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
     elevation: 3,
   },
-  confirmationHeader: {
+  passHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  ticketBadge: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  passBadge: {
+    backgroundColor: COLORS.availableBg,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
-  ticketBadgeText: {
+  passBadgeText: {
     fontSize: 9,
     fontWeight: '800',
     color: COLORS.availableText,
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
-  successPill: {
+  passStatusTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
-  successDot: {
+  passStatusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: COLORS.available,
   },
-  successPillText: {
+  passStatusText: {
     fontSize: 10,
     fontWeight: '800',
     color: COLORS.availableText,
@@ -405,117 +396,90 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    padding: 14,
-    borderRadius: 14,
+    backgroundColor: COLORS.cardSurfaceAlt,
+    padding: 12,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-  },
-  passLeft: {
-    flex: 1,
   },
   passLabel: {
     fontSize: 9,
     fontWeight: '800',
     color: COLORS.textMuted,
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
-  passPlateText: {
+  passPlate: {
     fontSize: 18,
     fontWeight: '900',
-    color: COLORS.textPrimary,
-    letterSpacing: 1,
+    color: COLORS.textDark,
+    letterSpacing: 0.8,
     marginTop: 2,
   },
   passTime: {
     fontSize: 11,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  passRight: {
-    alignItems: 'center',
-  },
-  passSlotLabel: {
-    fontSize: 9,
-    fontWeight: '700',
     color: COLORS.textMuted,
-    marginBottom: 4,
+    marginTop: 3,
   },
-  passSlotCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.cardBgElevated,
-    borderWidth: 2,
-    borderColor: COLORS.available,
+  passBayBox: {
+    backgroundColor: COLORS.primarySubtle,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  passSlotText: {
-    fontSize: 14,
+  passBayLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: COLORS.primaryDark,
+  },
+  passBayValue: {
+    fontSize: 16,
     fontWeight: '900',
-    color: COLORS.availableText,
+    color: COLORS.primaryDark,
   },
-  passTariffBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    paddingHorizontal: 4,
-  },
-  passTariffLabel: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    fontWeight: '700',
-  },
-  passTariffText: {
-    fontSize: 11,
-    color: COLORS.primaryLight,
-    fontWeight: '700',
-  },
-  dismissBtn: {
-    backgroundColor: COLORS.available,
+  passActionBtn: {
+    backgroundColor: COLORS.primary,
     paddingVertical: 12,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 14,
+    marginTop: 12,
   },
-  dismissBtnText: {
-    color: '#0A0F1D',
+  passActionBtnText: {
+    color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0.3,
+    fontWeight: '800',
+    letterSpacing: 0.2,
   },
   platePreviewSection: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  sectionMicroHeader: {
+  sectionHeader: {
     fontSize: 10,
     fontWeight: '800',
-    color: COLORS.primaryLight,
+    color: COLORS.textMuted,
     letterSpacing: 0.8,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   plateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    borderWidth: 2.5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 2,
     borderColor: '#CBD5E1',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    elevation: 2,
   },
   plateBlueStrip: {
     backgroundColor: '#1E3A8A',
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 7,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -524,12 +488,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '900',
-    letterSpacing: 0.5,
   },
   plateChakra: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: '#60A5FA',
     marginTop: 2,
   },
@@ -537,72 +500,71 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   plateNumberText: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '900',
     color: '#0F172A',
-    letterSpacing: 2,
+    letterSpacing: 1.5,
   },
-  plateNumberPlaceholder: {
+  platePlaceholderText: {
     color: '#94A3B8',
     fontStyle: 'italic',
   },
-  plateSecurityHolo: {
+  plateSecurityBadge: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   plateSecurityText: {
     fontSize: 11,
   },
-  sampleChipsRow: {
+  presetsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginTop: 8,
     flexWrap: 'wrap',
   },
-  sampleChipsLabel: {
+  presetsLabel: {
     fontSize: 11,
     color: COLORS.textMuted,
-    fontWeight: '600',
-  },
-  sampleChip: {
-    backgroundColor: COLORS.cardBgElevated,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  sampleChipText: {
-    fontSize: 10,
-    color: COLORS.cyanLight,
     fontWeight: '700',
   },
-  formCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
+  presetChip: {
+    backgroundColor: COLORS.cardSurface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
+  },
+  presetChipText: {
+    fontSize: 10,
+    color: COLORS.primaryDark,
+    fontWeight: '800',
+  },
+  formCard: {
+    backgroundColor: COLORS.cardSurface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 16,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   inputGroup: {
     marginBottom: 16,
   },
   inputLabel: {
     fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.textSecondary,
+    fontWeight: '800',
+    color: COLORS.textDark,
     marginBottom: 6,
-    letterSpacing: 0.3,
   },
   required: {
     color: COLORS.occupied,
@@ -610,20 +572,19 @@ const styles = StyleSheet.create({
   textInput: {
     backgroundColor: COLORS.inputBg,
     borderWidth: 1.5,
-    borderColor: COLORS.border,
-    borderRadius: 14,
+    borderColor: COLORS.inputBorder,
+    borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 11,
     fontSize: 15,
-    color: COLORS.textPrimary,
+    color: COLORS.textDark,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
   inputHint: {
     fontSize: 11,
     color: COLORS.textMuted,
-    marginTop: 6,
-    lineHeight: 15,
+    marginTop: 4,
   },
   slotChoiceHeader: {
     flexDirection: 'row',
@@ -631,103 +592,101 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  refreshSlotsText: {
+  refreshText: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.primaryLight,
+    color: COLORS.primary,
   },
-  slotOption: {
-    backgroundColor: COLORS.inputBg,
-    borderRadius: 14,
+  strategyOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.cardSurfaceAlt,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 12,
     marginBottom: 10,
-  },
-  slotOptionSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: 'rgba(99, 102, 241, 0.08)',
-  },
-  slotOptionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 12,
   },
-  radioCircle: {
+  strategyOptionSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primarySubtle,
+  },
+  radioDot: {
     width: 18,
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: COLORS.textMuted,
+    borderColor: COLORS.inputBorder,
   },
-  radioCircleActive: {
+  radioDotActive: {
     borderColor: COLORS.primary,
     backgroundColor: COLORS.primary,
   },
-  slotOptionTexts: {
+  strategyTexts: {
     flex: 1,
   },
-  optTitleRow: {
+  strategyTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  slotOptionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
+  strategyTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.textDark,
   },
-  recBadge: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+  recommendedPill: {
+    backgroundColor: 'rgba(13, 148, 136, 0.2)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
-  recBadgeText: {
+  recommendedPillText: {
     fontSize: 8,
     fontWeight: '800',
-    color: COLORS.primaryLight,
+    color: COLORS.primaryDark,
   },
-  slotOptionSub: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
+  strategySub: {
+    fontSize: 10,
+    color: COLORS.textMuted,
     marginTop: 2,
   },
-  subHeader: {
+  subLabel: {
     fontSize: 11,
     color: COLORS.textMuted,
-    fontWeight: '600',
+    fontWeight: '700',
     marginTop: 4,
     marginBottom: 8,
   },
-  noSlotsBanner: {
+  noSlotsWarningBox: {
     padding: 10,
     backgroundColor: COLORS.occupiedBg,
-    borderRadius: 10,
+    borderRadius: 8,
   },
-  noSlotsWarning: {
-    fontSize: 12,
+  noSlotsWarningText: {
+    fontSize: 11,
     color: COLORS.occupiedText,
-    fontWeight: '700',
+    fontWeight: '800',
     textAlign: 'center',
   },
-  baysGrid: {
+  baysWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
-  bayChip: {
+  baySelectChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: COLORS.cardSurfaceAlt,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
-    gap: 6,
+    gap: 5,
   },
-  bayChipSelected: {
+  baySelectChipSelected: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
@@ -736,59 +695,59 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
-  bayChipText: {
+  baySelectChipText: {
     fontSize: 12,
     fontWeight: '800',
-    color: COLORS.textSecondary,
+    color: COLORS.textSlate,
   },
-  bayChipTextSelected: {
+  baySelectChipTextSelected: {
     color: '#FFFFFF',
   },
-  pricingNotice: {
+  tariffCard: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    padding: 12,
+    backgroundColor: COLORS.cardSurfaceAlt,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
+    padding: 12,
     alignItems: 'center',
     gap: 10,
     marginBottom: 16,
   },
-  pricingIconBox: {
+  tariffIconBox: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: COLORS.cardBgElevated,
+    backgroundColor: COLORS.primarySubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pricingIcon: {
-    fontSize: 13,
+  tariffIcon: {
+    fontSize: 12,
   },
-  pricingInfo: {
+  tariffTexts: {
     flex: 1,
   },
-  pricingTitle: {
+  tariffTitle: {
     fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
+    fontWeight: '800',
+    color: COLORS.textDark,
   },
-  pricingSub: {
+  tariffSub: {
     fontSize: 10,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     marginTop: 1,
   },
   submitBtn: {
     backgroundColor: COLORS.primary,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: 'center',
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
   },
   submitBtnDisabled: {
     opacity: 0.5,
@@ -802,6 +761,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 });
