@@ -12,6 +12,7 @@ import { COLORS } from '../constants/colors';
 import { Header } from '../components/Header';
 import { OccupancyGauge } from '../components/OccupancyGauge';
 import { StatCard } from '../components/StatCard';
+import { EmptyState } from '../components/EmptyState';
 import { slotsApi, sessionsApi, reportsApi } from '../api/endpoints';
 import { SlotAvailabilitySummary, ParkingSession, DailyRevenue } from '../types';
 import { formatCurrency, formatTimeOnly } from '../utils/formatting';
@@ -75,36 +76,77 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Connecting to Smart Parking Server...</Text>
+        <View style={styles.loadingSpinnerRing}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+        <Text style={styles.loadingTitle}>Connecting to Smart Parking Core</Text>
+        <Text style={styles.loadingSub}>Synchronizing bay telemetry & session status...</Text>
       </View>
     );
   }
 
+  const paidRatio = todayRevenue && todayRevenue.totalFinalizedCharges > 0
+    ? Math.min(100, Math.round((todayRevenue.paidRevenue / todayRevenue.totalFinalizedCharges) * 100))
+    : 0;
+
   return (
     <View style={styles.container}>
       <Header
-        title="Smart Parking"
-        subtitle="Real-time facility management & analytics"
+        title="Command Hub"
+        subtitle="Intelligent facility telemetry & live slot dispatch"
         badge="ONLINE"
+        rightActionText="Sync ⟳"
+        onRightAction={fetchData}
       />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
+        }
         showsVerticalScrollIndicator={false}
       >
         {error && (
           <View style={styles.errorBanner}>
-            <Text style={styles.errorTitle}>Connection Warning</Text>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={fetchData}>
-              <Text style={styles.retryBtnText}>Retry Connection</Text>
-            </TouchableOpacity>
+            <View style={styles.errorIconCircle}>
+              <Text style={styles.errorIcon}>⚠️</Text>
+            </View>
+            <View style={styles.errorContent}>
+              <Text style={styles.errorTitle}>Telemetry Sync Warning</Text>
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryBtn} onPress={fetchData} activeOpacity={0.8}>
+                <Text style={styles.retryBtnText}>Retry Handshake</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
-        {/* Occupancy Indicator */}
+        {/* Quick Action Launcher Card */}
+        <View style={styles.actionHeroCard}>
+          <View style={styles.actionHeroLeft}>
+            <View style={styles.actionPill}>
+              <Text style={styles.actionPillText}>FAST DISPATCH</Text>
+            </View>
+            <Text style={styles.actionHeroTitle}>Register Vehicle Check-In</Text>
+            <Text style={styles.actionHeroSub}>
+              {availability.availableSlots > 0
+                ? `${availability.availableSlots} bays available for immediate assignment`
+                : 'Facility currently full'}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[
+              styles.entryLaunchBtn,
+              availability.availableSlots === 0 && styles.entryLaunchBtnDisabled,
+            ]}
+            onPress={onNavigateToBook}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.entryLaunchBtnText}>+ Check-In</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Real-Time Facility Occupancy Gauge */}
         <OccupancyGauge
           total={availability.totalSlots}
           available={availability.availableSlots}
@@ -112,103 +154,167 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           occupancyPercent={availability.occupancyRatePercent}
         />
 
-        {/* Quick Stats Grid */}
+        {/* 3-Column Executive Metrics Grid */}
         <View style={styles.statsRow}>
           <StatCard
             label="Available"
             value={availability.availableSlots}
             variant="available"
-            subValue="Ready to park"
+            subValue="Immediate entry"
+            icon="🅿"
           />
           <StatCard
             label="Occupied"
             value={availability.occupiedSlots}
             variant="occupied"
-            subValue="Vehicles parked"
+            subValue="Vehicles active"
+            icon="🚗"
           />
           <StatCard
-            label="Total Capacity"
+            label="Facility Bay"
             value={availability.totalSlots}
             variant="primary"
-            subValue="All bays"
+            subValue="Max bay capacity"
+            icon="🏢"
           />
         </View>
 
-        {/* Today's Revenue Summary Card */}
-        <TouchableOpacity style={styles.revenueCard} onPress={onNavigateToRevenue}>
-          <View style={styles.revenueHeader}>
-            <View>
-              <Text style={styles.revenueLabel}>TODAY'S REVENUE</Text>
+        {/* Today's Revenue Intelligence Widget */}
+        <TouchableOpacity
+          style={styles.revenueWidget}
+          onPress={onNavigateToRevenue}
+          activeOpacity={0.88}
+        >
+          <View style={styles.revenueTopRow}>
+            <View style={styles.revenueHeaderLeft}>
+              <View style={styles.revenueMetaRow}>
+                <Text style={styles.revenueLabel}>TODAY'S FINALIZED REVENUE</Text>
+                <View style={styles.sessionsBadge}>
+                  <Text style={styles.sessionsBadgeText}>
+                    {todayRevenue?.completedSessionsCount ?? 0} Checkouts
+                  </Text>
+                </View>
+              </View>
               <Text style={styles.revenueAmount}>
                 {formatCurrency(todayRevenue?.totalFinalizedCharges ?? 0)}
               </Text>
             </View>
-            <View style={styles.revenueBadge}>
-              <Text style={styles.revenueBadgeText}>
-                {todayRevenue?.completedSessionsCount ?? 0} Completed
-              </Text>
+
+            <View style={styles.analyticsArrowBox}>
+              <Text style={styles.analyticsArrowText}>Analytics →</Text>
             </View>
           </View>
 
-          <View style={styles.revenueBreakdown}>
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownLabel}>Paid Revenue:</Text>
-              <Text style={[styles.breakdownValue, { color: COLORS.available }]}>
-                {formatCurrency(todayRevenue?.paidRevenue ?? 0)}
-              </Text>
+          {/* Paid vs Outstanding Progress Bar */}
+          <View style={styles.revenueProgressBarContainer}>
+            <View style={styles.revenueProgressBarBg}>
+              <View style={[styles.revenueProgressBarFill, { width: `${paidRatio}%` }]} />
             </View>
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownLabel}>Outstanding Unpaid:</Text>
-              <Text style={[styles.breakdownValue, { color: COLORS.warning }]}>
-                {formatCurrency(todayRevenue?.unpaidOutstandingAmount ?? 0)}
-              </Text>
+            <View style={styles.revenueProgressMeta}>
+              <Text style={styles.paidRateText}>{paidRatio}% Collected</Text>
+              <Text style={styles.currencyNotice}>Currency: {todayRevenue?.currency ?? 'INR'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.revenueSplitRow}>
+            <View style={styles.splitBox}>
+              <View style={[styles.splitIndicator, { backgroundColor: COLORS.available }]} />
+              <View>
+                <Text style={styles.splitLabel}>Paid Collections</Text>
+                <Text style={[styles.splitAmount, { color: COLORS.availableText }]}>
+                  {formatCurrency(todayRevenue?.paidRevenue ?? 0)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.splitBox}>
+              <View style={[styles.splitIndicator, { backgroundColor: COLORS.warning }]} />
+              <View>
+                <Text style={styles.splitLabel}>Unpaid Outstanding</Text>
+                <Text style={[styles.splitAmount, { color: COLORS.warningText }]}>
+                  {formatCurrency(todayRevenue?.unpaidOutstandingAmount ?? 0)}
+                </Text>
+              </View>
             </View>
           </View>
         </TouchableOpacity>
 
-        {/* Action Shortcuts */}
-        <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.actionBtnPrimary} onPress={onNavigateToBook}>
-            <Text style={styles.actionBtnPrimaryText}>+ Book Vehicle Entry</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtnSecondary} onPress={onNavigateToSlots}>
-            <Text style={styles.actionBtnSecondaryText}>View Slot Grid</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Active Parking Sessions Feed */}
+        <View style={styles.feedHeaderRow}>
+          <View style={styles.feedTitleGroup}>
+            <Text style={styles.feedTitle}>Active Parking Stream</Text>
+            <View style={styles.feedBadge}>
+              <Text style={styles.feedBadgeText}>{activeSessions.length} Parked</Text>
+            </View>
+          </View>
 
-        {/* Active Parking Sessions Preview */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Active Parking Sessions ({activeSessions.length})</Text>
-          <TouchableOpacity onPress={onNavigateToActive}>
+          <TouchableOpacity onPress={onNavigateToActive} activeOpacity={0.7}>
             <Text style={styles.seeAllText}>Manage All →</Text>
           </TouchableOpacity>
         </View>
 
         {activeSessions.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No Active Parked Vehicles</Text>
-            <Text style={styles.emptyText}>All parking slots are currently free and available.</Text>
-          </View>
+          <EmptyState
+            icon="🅿"
+            title="All Bays Are Vacant"
+            description="There are no active parking sessions in progress. New vehicle check-ins will appear here in real time."
+            actionLabel="+ Register Vehicle Check-In"
+            onAction={onNavigateToBook}
+          />
         ) : (
           activeSessions.slice(0, 3).map((session) => (
-            <View key={session.id} style={styles.sessionCard}>
-              <View style={styles.sessionLeft}>
-                <View style={styles.slotTag}>
-                  <Text style={styles.slotTagText}>{session.slotNumber}</Text>
+            <TouchableOpacity
+              key={session.id}
+              style={styles.sessionFeedCard}
+              onPress={onNavigateToActive}
+              activeOpacity={0.85}
+            >
+              <View style={styles.sessionCardTop}>
+                <View style={styles.sessionLeftCol}>
+                  <View style={styles.bayPill}>
+                    <Text style={styles.bayPillLabel}>BAY</Text>
+                    <Text style={styles.bayPillText}>{session.slotNumber}</Text>
+                  </View>
+
+                  <View style={styles.vehicleDetails}>
+                    <Text style={styles.vehicleNumber}>{session.vehicleNumber}</Text>
+                    <Text style={styles.entryTimeText}>
+                      In at {formatTimeOnly(session.entryTime)}
+                    </Text>
+                  </View>
                 </View>
-                <View>
-                  <Text style={styles.vehicleText}>{session.vehicleNumber}</Text>
-                  <Text style={styles.timeText}>Entered: {formatTimeOnly(session.entryTime)}</Text>
+
+                <View style={styles.sessionRightCol}>
+                  <Text style={styles.feeEstimateValue}>{formatCurrency(session.totalFee)}</Text>
+                  <Text style={styles.feeSub}>Current running fee</Text>
                 </View>
               </View>
 
-              <View style={styles.sessionRight}>
-                <Text style={styles.durationText}>{session.durationFormatted}</Text>
-                <Text style={styles.estFeeText}>{formatCurrency(session.totalFee)}</Text>
+              <View style={styles.sessionCardBottom}>
+                <View style={styles.elapsedBox}>
+                  <Text style={styles.elapsedIcon}>⏱️</Text>
+                  <Text style={styles.elapsedText}>{session.durationFormatted} elapsed</Text>
+                </View>
+
+                <View style={styles.checkoutHint}>
+                  <Text style={styles.checkoutHintText}>Tap to checkout →</Text>
+                </View>
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
+
+        {/* Quick View Slots Grid Shortcut */}
+        <TouchableOpacity style={styles.slotGridBanner} onPress={onNavigateToSlots} activeOpacity={0.85}>
+          <View style={styles.slotGridIcon}>
+            <Text style={styles.slotGridIconText}>🗺️</Text>
+          </View>
+          <View style={styles.slotGridInfo}>
+            <Text style={styles.slotGridTitle}>Visual Parking Bay Map</Text>
+            <Text style={styles.slotGridSub}>Explore all 20 bays with real-time status & floor layout</Text>
+          </View>
+          <Text style={styles.slotGridArrow}>→</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -228,224 +334,430 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgPrimary,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
   },
-  loadingText: {
-    marginTop: 14,
-    fontSize: 14,
+  loadingSpinnerRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.25)',
+    marginBottom: 16,
+  },
+  loadingTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
+  },
+  loadingSub: {
+    fontSize: 12,
     color: COLORS.textSecondary,
-    fontWeight: '600',
+    marginTop: 4,
+    textAlign: 'center',
   },
   errorBanner: {
+    flexDirection: 'row',
     backgroundColor: COLORS.occupiedBg,
-    borderColor: COLORS.occupied,
+    borderColor: COLORS.occupiedBorder,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     marginBottom: 14,
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  errorIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(244, 63, 94, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorIcon: {
+    fontSize: 14,
+  },
+  errorContent: {
+    flex: 1,
   },
   errorTitle: {
     color: COLORS.occupiedText,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
   errorText: {
     color: COLORS.textPrimary,
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 2,
+    lineHeight: 16,
   },
   retryBtn: {
     backgroundColor: COLORS.cardBgElevated,
-    paddingVertical: 6,
+    paddingVertical: 5,
     paddingHorizontal: 12,
     borderRadius: 8,
     alignSelf: 'flex-start',
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
   },
   retryBtnText: {
     color: COLORS.textPrimary,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
+  },
+  actionHeroCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.3)',
+    padding: 16,
+    marginBottom: 10,
+  },
+  actionHeroLeft: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  actionPill: {
+    backgroundColor: 'rgba(99, 102, 241, 0.25)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginBottom: 6,
+  },
+  actionPillText: {
+    color: COLORS.primaryLight,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  actionHeroTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
+  },
+  actionHeroSub: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  entryLaunchBtn: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  entryLaunchBtnDisabled: {
+    opacity: 0.5,
+  },
+  entryLaunchBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   statsRow: {
     flexDirection: 'row',
     gap: 10,
-    marginVertical: 10,
+    marginVertical: 6,
   },
-  revenueCard: {
+  revenueWidget: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 18,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  revenueTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  revenueHeaderLeft: {
+    flex: 1,
+  },
+  revenueMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  revenueLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.primaryLight,
+    letterSpacing: 0.8,
+  },
+  sessionsBadge: {
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  sessionsBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: COLORS.cyanLight,
+  },
+  revenueAmount: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: COLORS.available,
+    letterSpacing: -0.5,
+    marginTop: 3,
+  },
+  analyticsArrowBox: {
+    backgroundColor: COLORS.cardBgElevated,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  analyticsArrowText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+  },
+  revenueProgressBarContainer: {
+    marginVertical: 12,
+  },
+  revenueProgressBarBg: {
+    height: 6,
+    backgroundColor: COLORS.inputBg,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  revenueProgressBarFill: {
+    height: '100%',
+    backgroundColor: COLORS.available,
+    borderRadius: 3,
+  },
+  revenueProgressMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  paidRateText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.availableText,
+  },
+  currencyNotice: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+  },
+  revenueSplitRow: {
+    flexDirection: 'row',
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: 12,
+  },
+  splitBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  splitIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  splitLabel: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+    fontWeight: '600',
+  },
+  splitAmount: {
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: 1,
+  },
+  feedHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 14,
+    marginBottom: 10,
+  },
+  feedTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  feedTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
+  },
+  feedBadge: {
+    backgroundColor: COLORS.cardBgElevated,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  feedBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.primaryLight,
+  },
+  seeAllText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primaryLight,
+  },
+  sessionFeedCard: {
     backgroundColor: COLORS.cardBg,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 16,
-    marginVertical: 10,
+    padding: 14,
+    marginBottom: 10,
   },
-  revenueHeader: {
+  sessionCardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  revenueLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
+  sessionLeftCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  revenueAmount: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: COLORS.available,
-    marginTop: 2,
-  },
-  revenueBadge: {
+  bayPill: {
     backgroundColor: COLORS.cardBgElevated,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  revenueBadgeText: {
+  bayPillLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+  },
+  bayPillText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: COLORS.cyanLight,
+  },
+  vehicleDetails: {},
+  vehicleNumber: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: 0.5,
+  },
+  entryTimeText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  sessionRightCol: {
+    alignItems: 'flex-end',
+  },
+  feeEstimateValue: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: COLORS.available,
+  },
+  feeSub: {
+    fontSize: 9,
+    color: COLORS.textMuted,
+    marginTop: 1,
+  },
+  sessionCardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: 8,
+  },
+  elapsedBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  elapsedIcon: {
+    fontSize: 11,
+  },
+  elapsedText: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontWeight: '600',
+  },
+  checkoutHint: {},
+  checkoutHintText: {
     fontSize: 11,
     fontWeight: '700',
     color: COLORS.primaryLight,
   },
-  revenueBreakdown: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    paddingTop: 10,
-  },
-  breakdownItem: {
+  slotGridBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  breakdownLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-  },
-  breakdownValue: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginVertical: 12,
-  },
-  actionBtnPrimary: {
-    flex: 1.2,
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionBtnPrimaryText: {
-    color: COLORS.bgPrimary,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  actionBtnSecondary: {
-    flex: 1,
-    backgroundColor: COLORS.cardBgElevated,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
+    marginTop: 4,
+    gap: 12,
   },
-  actionBtnSecondaryText: {
-    color: COLORS.textPrimary,
+  slotGridIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: COLORS.cardBgElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  slotGridIconText: {
+    fontSize: 18,
+  },
+  slotGridInfo: {
+    flex: 1,
+  },
+  slotGridTitle: {
     fontSize: 14,
     fontWeight: '700',
+    color: COLORS.textPrimary,
   },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 10,
+  slotGridSub: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
-  sectionTitle: {
+  slotGridArrow: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.textPrimary,
-  },
-  seeAllText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  emptyCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 14,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  emptyTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  emptyText: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  sessionCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sessionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  slotTag: {
-    backgroundColor: COLORS.primaryDark,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  slotTagText: {
-    color: COLORS.textPrimary,
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  vehicleText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-  },
-  timeText: {
-    fontSize: 11,
     color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  sessionRight: {
-    alignItems: 'flex-end',
-  },
-  durationText: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-  },
-  estFeeText: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: COLORS.available,
-    marginTop: 2,
   },
 });

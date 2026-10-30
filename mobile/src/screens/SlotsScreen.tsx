@@ -12,6 +12,7 @@ import {
 import { COLORS } from '../constants/colors';
 import { Header } from '../components/Header';
 import { SlotBadge } from '../components/SlotBadge';
+import { EmptyState } from '../components/EmptyState';
 import { slotsApi } from '../api/endpoints';
 import { ParkingSlot } from '../types';
 
@@ -31,7 +32,7 @@ export const SlotsScreen: React.FC<SlotsScreenProps> = ({ onSelectSlotToBook }) 
       const data = await slotsApi.getAll();
       setSlots(data);
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Could not fetch parking slots.');
+      Alert.alert('Slot Fetch Error', err.message || 'Could not fetch parking slots.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -60,12 +61,12 @@ export const SlotsScreen: React.FC<SlotsScreenProps> = ({ onSelectSlotToBook }) 
     setSelectedSlot(slot);
     if (slot.status === 'AVAILABLE') {
       Alert.alert(
-        `Slot ${slot.slotNumber}`,
-        `This slot is currently AVAILABLE. Would you like to book a vehicle into slot ${slot.slotNumber}?`,
+        `Reserve Bay ${slot.slotNumber}`,
+        `Bay ${slot.slotNumber} is currently VACANT and ready for parking.\n\nProceed to register vehicle check-in for this bay?`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Book This Slot',
+            text: 'Allocate Bay Now',
             style: 'default',
             onPress: () => onSelectSlotToBook(slot),
           },
@@ -73,9 +74,9 @@ export const SlotsScreen: React.FC<SlotsScreenProps> = ({ onSelectSlotToBook }) 
       );
     } else {
       Alert.alert(
-        `Slot ${slot.slotNumber} (OCCUPIED)`,
-        `This slot is currently occupied by an active parking session. View the Active Parking tab to monitor or checkout the vehicle.`,
-        [{ text: 'OK' }]
+        `Bay ${slot.slotNumber} (ACTIVE)`,
+        `This bay is currently occupied by an active parking session. To inspect or complete checkout, view the Active Parking tab.`,
+        [{ text: 'Dismiss' }]
       );
     }
   };
@@ -84,93 +85,150 @@ export const SlotsScreen: React.FC<SlotsScreenProps> = ({ onSelectSlotToBook }) 
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading parking slots...</Text>
+        <Text style={styles.loadingText}>Rendering parking bay topography...</Text>
       </View>
     );
   }
 
+  const occupancyRatio = slots.length > 0 ? Math.round((occupiedCount / slots.length) * 100) : 0;
+
   return (
     <View style={styles.container}>
       <Header
-        title="Parking Slots"
-        subtitle={`${availableCount} Available • ${occupiedCount} Occupied`}
+        title="Bay Inventory"
+        subtitle={`${availableCount} Available Bays • ${occupiedCount} In Use`}
+        badge="REAL-TIME"
+        rightActionText="Sync ⟳"
+        onRightAction={fetchSlots}
       />
 
-      {/* Filter Tabs */}
-      <View style={styles.filterContainer}>
+      {/* Top Occupancy Status Strip */}
+      <View style={styles.capacityStrip}>
+        <View style={styles.capacityHeader}>
+          <Text style={styles.capacityTitle}>FACILITY UTILIZATION</Text>
+          <Text style={styles.capacityRate}>{occupancyRatio}% Occupied</Text>
+        </View>
+        <View style={styles.capacityBarBg}>
+          <View
+            style={[
+              styles.capacityBarFill,
+              {
+                width: `${occupancyRatio}%`,
+                backgroundColor: occupancyRatio >= 85 ? COLORS.occupied : COLORS.available,
+              },
+            ]}
+          />
+        </View>
+      </View>
+
+      {/* Segmented Filter Control */}
+      <View style={styles.filterBar}>
         <TouchableOpacity
-          style={[styles.filterBtn, filter === 'ALL' && styles.filterBtnActive]}
+          style={[styles.filterSegment, filter === 'ALL' && styles.filterSegmentActive]}
           onPress={() => setFilter('ALL')}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.filterText, filter === 'ALL' && styles.filterTextActive]}>
-            All ({slots.length})
+          <Text style={[styles.filterLabel, filter === 'ALL' && styles.filterLabelActive]}>
+            All Bays ({slots.length})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterBtn, filter === 'AVAILABLE' && styles.filterBtnActive]}
+          style={[styles.filterSegment, filter === 'AVAILABLE' && styles.filterSegmentActive]}
           onPress={() => setFilter('AVAILABLE')}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.filterText, filter === 'AVAILABLE' && styles.filterTextActive]}>
-            Available ({availableCount})
+          <View style={[styles.filterDot, { backgroundColor: COLORS.available }]} />
+          <Text style={[styles.filterLabel, filter === 'AVAILABLE' && styles.filterLabelActive]}>
+            Open ({availableCount})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterBtn, filter === 'OCCUPIED' && styles.filterBtnActive]}
+          style={[styles.filterSegment, filter === 'OCCUPIED' && styles.filterSegmentActive]}
           onPress={() => setFilter('OCCUPIED')}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.filterText, filter === 'OCCUPIED' && styles.filterTextActive]}>
+          <View style={[styles.filterDot, { backgroundColor: COLORS.occupied }]} />
+          <Text style={[styles.filterLabel, filter === 'OCCUPIED' && styles.filterLabelActive]}>
             Occupied ({occupiedCount})
           </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.gridContainer}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
+        contentContainerStyle={styles.gridScroll}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
+        }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.grid}>
-          {filteredSlots.map((slot) => {
-            const isAvailable = slot.status === 'AVAILABLE';
-            const isSelected = selectedSlot?.id === slot.id;
+        {filteredSlots.length === 0 ? (
+          <EmptyState
+            icon="🅿"
+            title="No Matching Bays"
+            description={`No parking bays found matching the current filter "${filter}". Switch filters to view all bays.`}
+            actionLabel="Show All Bays"
+            onAction={() => setFilter('ALL')}
+          />
+        ) : (
+          <View style={styles.bayGrid}>
+            {filteredSlots.map((slot) => {
+              const isAvailable = slot.status === 'AVAILABLE';
+              const isSelected = selectedSlot?.id === slot.id;
 
-            return (
-              <TouchableOpacity
-                key={slot.id}
-                style={[
-                  styles.slotCard,
-                  isAvailable ? styles.slotCardAvailable : styles.slotCardOccupied,
-                  isSelected && styles.slotCardSelected,
-                ]}
-                onPress={() => handleSlotPress(slot)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.slotCardTop}>
-                  <Text style={styles.slotNumber}>{slot.slotNumber}</Text>
+              return (
+                <TouchableOpacity
+                  key={slot.id}
+                  style={[
+                    styles.bayCard,
+                    isAvailable ? styles.bayCardAvailable : styles.bayCardOccupied,
+                    isSelected && styles.bayCardSelected,
+                  ]}
+                  onPress={() => handleSlotPress(slot)}
+                  activeOpacity={0.85}
+                >
+                  {/* Floor Marking Demarcation Lines */}
                   <View
                     style={[
-                      styles.indicatorDot,
+                      styles.floorLineTop,
                       { backgroundColor: isAvailable ? COLORS.available : COLORS.occupied },
                     ]}
                   />
-                </View>
 
-                <View style={styles.slotCardBottom}>
-                  <SlotBadge status={slot.status} />
-                  <Text style={styles.tapHint}>
-                    {isAvailable ? 'Tap to book' : 'Occupied'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                  <View style={styles.bayHeader}>
+                    <View style={styles.bayBadge}>
+                      <Text style={styles.bayBadgeText}>BAY</Text>
+                    </View>
+                    <SlotBadge status={slot.status} size="sm" />
+                  </View>
 
-        {filteredSlots.length === 0 && (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No parking slots found matching the selected filter.</Text>
+                  <View style={styles.bayCenter}>
+                    <Text
+                      style={[
+                        styles.bayNumber,
+                        { color: isAvailable ? COLORS.textPrimary : COLORS.occupiedText },
+                      ]}
+                    >
+                      {slot.slotNumber}
+                    </Text>
+                    <Text style={styles.bayType}>Standard Bay</Text>
+                  </View>
+
+                  <View style={styles.bayFooter}>
+                    {isAvailable ? (
+                      <View style={styles.bookPromptPill}>
+                        <Text style={styles.bookPromptText}>Tap to Allocate →</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.occupiedPill}>
+                        <Text style={styles.occupiedPillText}>Vehicle Active</Text>
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -188,105 +246,191 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgPrimary,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 14,
+    fontSize: 13,
     color: COLORS.textSecondary,
-    fontSize: 14,
+    fontWeight: '600',
   },
-  filterContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-    backgroundColor: COLORS.bgPrimary,
-  },
-  filterBtn: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 10,
+  capacityStrip: {
     backgroundColor: COLORS.cardBg,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  capacityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  capacityTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 0.8,
+  },
+  capacityRate: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.cyanLight,
+  },
+  capacityBarBg: {
+    height: 6,
+    backgroundColor: COLORS.inputBg,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  capacityBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  filterBar: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.bgPrimary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  filterSegment: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.cardBg,
+    paddingVertical: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
+    gap: 6,
   },
-  filterBtnActive: {
-    backgroundColor: COLORS.primaryDark,
+  filterSegmentActive: {
+    backgroundColor: 'rgba(99, 102, 241, 0.18)',
     borderColor: COLORS.primary,
   },
-  filterText: {
-    fontSize: 12,
+  filterDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  filterLabel: {
+    fontSize: 11,
     fontWeight: '700',
     color: COLORS.textSecondary,
   },
-  filterTextActive: {
-    color: COLORS.textPrimary,
+  filterLabelActive: {
+    color: COLORS.primaryLight,
+    fontWeight: '800',
   },
-  gridContainer: {
+  gridScroll: {
     padding: 16,
     paddingBottom: 40,
   },
-  grid: {
+  bayGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+    justifyContent: 'space-between',
   },
-  slotCard: {
+  bayCard: {
     width: '48%',
     backgroundColor: COLORS.cardBg,
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1.5,
-    minHeight: 110,
-    justifyContent: 'space-between',
-  },
-  slotCardAvailable: {
+    borderRadius: 18,
+    borderWidth: 1,
     borderColor: COLORS.border,
+    padding: 14,
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  slotCardOccupied: {
-    borderColor: 'rgba(239, 68, 68, 0.35)',
-    backgroundColor: 'rgba(30, 41, 59, 0.75)',
+  bayCardAvailable: {
+    backgroundColor: 'rgba(19, 29, 53, 0.95)',
   },
-  slotCardSelected: {
+  bayCardOccupied: {
+    backgroundColor: 'rgba(30, 20, 35, 0.95)',
+    borderColor: 'rgba(244, 63, 94, 0.25)',
+  },
+  bayCardSelected: {
     borderColor: COLORS.primary,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 2,
   },
-  slotCardTop: {
+  floorLineTop: {
+    position: 'absolute',
+    top: 0,
+    left: 14,
+    right: 14,
+    height: 3,
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
+    opacity: 0.8,
+  },
+  bayHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 10,
+    paddingTop: 4,
   },
-  slotNumber: {
-    fontSize: 18,
+  bayBadge: {
+    backgroundColor: COLORS.cardBgElevated,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  bayBadgeText: {
+    fontSize: 8,
     fontWeight: '900',
-    color: COLORS.textPrimary,
+    color: COLORS.textMuted,
   },
-  indicatorDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  slotCardBottom: {
-    marginTop: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  bayCenter: {
     alignItems: 'center',
+    paddingVertical: 8,
   },
-  tapHint: {
+  bayNumber: {
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  bayType: {
     fontSize: 10,
     color: COLORS.textMuted,
     fontWeight: '600',
+    marginTop: 2,
   },
-  emptyContainer: {
-    padding: 40,
+  bayFooter: {
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: 8,
+  },
+  bookPromptPill: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  bookPromptText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.availableText,
+  },
+  occupiedPill: {
+    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    paddingVertical: 4,
+    borderRadius: 8,
     alignItems: 'center',
   },
-  emptyText: {
-    color: COLORS.textSecondary,
-    fontSize: 14,
+  occupiedPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.occupiedText,
   },
 });

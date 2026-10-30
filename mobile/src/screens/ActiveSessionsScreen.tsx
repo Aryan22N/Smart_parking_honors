@@ -6,12 +6,14 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  TextInput,
   ActivityIndicator,
   Alert,
 } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { Header } from '../components/Header';
 import { InvoiceModal } from '../components/InvoiceModal';
+import { EmptyState } from '../components/EmptyState';
 import { sessionsApi } from '../api/endpoints';
 import { ParkingSession, Invoice } from '../types';
 import { formatCurrency, formatTimeOnly } from '../utils/formatting';
@@ -26,6 +28,7 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
   const [sessions, setSessions] = useState<ParkingSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [checkingOutId, setCheckingOutId] = useState<number | null>(null);
   const [recalculatingId, setRecalculatingId] = useState<number | null>(null);
 
@@ -37,7 +40,7 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
       const data = await sessionsApi.getActive();
       setSessions(data);
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to fetch active parking sessions.');
+      Alert.alert('Session Error', err.message || 'Failed to fetch active parking sessions.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -57,7 +60,6 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
     try {
       setRecalculatingId(sessionId);
       const estimation = await sessionsApi.estimateFare(sessionId);
-      // Update local state with fresh estimate from server
       setSessions((prev) =>
         prev.map((s) =>
           s.id === sessionId
@@ -71,8 +73,8 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
         )
       );
       Alert.alert(
-        'Fare Updated',
-        `Current estimate for vehicle ${estimation.vehicleNumber}:\n• Billed Duration: ${estimation.durationFormatted}\n• Chargeable Blocks: ${estimation.billableBlocks} (${estimation.ratePerBlockInr} INR/block)\n• Estimated Fee: ${formatCurrency(estimation.estimatedFee)}`
+        'Fare Estimation Updated',
+        `Vehicle: ${estimation.vehicleNumber}\n• Elapsed: ${estimation.durationFormatted}\n• Chargeable Blocks: ${estimation.billableBlocks} (${estimation.ratePerBlockInr} INR/block)\n• Estimated Fee: ${formatCurrency(estimation.estimatedFee)}`
       );
     } catch (err: any) {
       Alert.alert('Recalculation Failed', err.message || 'Could not recalculate fare.');
@@ -83,17 +85,17 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
 
   const handleCheckoutPrompt = (session: ParkingSession) => {
     Alert.alert(
-      'Confirm Vehicle Checkout',
-      `Vehicle: ${session.vehicleNumber}\nSlot: ${session.slotNumber}\nCurrent Estimated Fee: ${formatCurrency(session.totalFee)}\n\nDo you want to check out this vehicle now?`,
+      `Check Out Vehicle: ${session.vehicleNumber}`,
+      `Allocated Bay: ${session.slotNumber}\nCurrent Estimated Fee: ${formatCurrency(session.totalFee)}\n\nSelect checkout settlement method:`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Checkout (Unpaid)',
+          text: 'Checkout (Unpaid / Pay Later)',
           style: 'default',
           onPress: () => performCheckout(session.id, false),
         },
         {
-          text: 'Checkout & Pay Immediately',
+          text: 'Checkout & Mark PAID',
           style: 'default',
           onPress: () => performCheckout(session.id, true),
         },
@@ -115,11 +117,22 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
     }
   };
 
+  const filteredSessions = sessions.filter((s) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.trim().toLowerCase();
+    return (
+      s.vehicleNumber.toLowerCase().includes(q) ||
+      s.slotNumber.toLowerCase().includes(q)
+    );
+  });
+
+  const totalRunningAccrued = sessions.reduce((acc, curr) => acc + (curr.totalFee || 0), 0);
+
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Fetching active sessions...</Text>
+        <Text style={styles.loadingText}>Polling active telemetry...</Text>
       </View>
     );
   }
@@ -127,83 +140,128 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
   return (
     <View style={styles.container}>
       <Header
-        title="Active Parking"
-        subtitle={`${sessions.length} parked vehicles currently active`}
+        title="Active Sessions"
+        subtitle={`${sessions.length} vehicles currently parked in bays`}
+        badge="MONITORING"
+        rightActionText="Sync ⟳"
+        onRightAction={fetchActiveSessions}
       />
+
+      {/* Overview Accrued Metrics Strip */}
+      <View style={styles.telemetryBar}>
+        <View style={styles.telemetryItem}>
+          <Text style={styles.telemetryLabel}>ACTIVE VEHICLES</Text>
+          <Text style={styles.telemetryValue}>{sessions.length} Parked</Text>
+        </View>
+
+        <View style={styles.telemetryDivider} />
+
+        <View style={styles.telemetryItem}>
+          <Text style={styles.telemetryLabel}>RUNNING ESTIMATED CHARGES</Text>
+          <Text style={[styles.telemetryValue, { color: COLORS.available }]}>
+            {formatCurrency(totalRunningAccrued)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Search Input Bar */}
+      {sessions.length > 0 && (
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by license plate or bay (e.g. MH12 or A-01)..."
+            placeholderTextColor={COLORS.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="characters"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
+              <Text style={styles.clearSearchText}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       <ScrollView
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
+        }
         showsVerticalScrollIndicator={false}
       >
-        {sessions.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconBox}>
-              <Text style={styles.emptyIcon}>🅿</Text>
-            </View>
-            <Text style={styles.emptyTitle}>No Active Sessions</Text>
-            <Text style={styles.emptySubtitle}>
-              There are currently no vehicles parked in the facility.
-            </Text>
-            <TouchableOpacity style={styles.bookShortcutBtn} onPress={onNavigateToBook}>
-              <Text style={styles.bookShortcutBtnText}>+ Register Vehicle Entry</Text>
-            </TouchableOpacity>
-          </View>
+        {filteredSessions.length === 0 ? (
+          <EmptyState
+            icon="⏱️"
+            title={sessions.length === 0 ? 'No Active Parking Sessions' : 'No Matching Vehicles'}
+            description={
+              sessions.length === 0
+                ? 'All parking bays are currently vacant. Vehicles checked in will appear here with live duration tracking.'
+                : `No active sessions match "${searchQuery}". Clear your search query to see all active sessions.`
+            }
+            actionLabel={sessions.length === 0 ? '+ Register Vehicle Check-In' : 'Clear Search Filter'}
+            onAction={sessions.length === 0 ? onNavigateToBook : () => setSearchQuery('')}
+          />
         ) : (
-          sessions.map((session) => {
+          filteredSessions.map((session) => {
             const isRecalculating = recalculatingId === session.id;
             const isCheckingOut = checkingOutId === session.id;
 
             return (
-              <View key={session.id} style={styles.card}>
-                {/* Card Top Row */}
+              <View key={session.id} style={styles.sessionCard}>
+                {/* Header Row: Bay Badge, Plate Number, In-Time */}
                 <View style={styles.cardHeader}>
-                  <View style={styles.slotPill}>
-                    <Text style={styles.slotPillText}>{session.slotNumber}</Text>
+                  <View style={styles.bayBadge}>
+                    <Text style={styles.bayBadgeLabel}>BAY</Text>
+                    <Text style={styles.bayBadgeNumber}>{session.slotNumber}</Text>
                   </View>
 
-                  <View style={styles.vehicleInfo}>
-                    <Text style={styles.vehicleNumber}>{session.vehicleNumber}</Text>
+                  <View style={styles.vehicleDetails}>
+                    <Text style={styles.plateNumber}>{session.vehicleNumber}</Text>
                     <Text style={styles.entryTime}>
-                      Parked at {formatTimeOnly(session.entryTime)}
+                      Checked-in at {formatTimeOnly(session.entryTime)}
                     </Text>
                   </View>
 
-                  <View style={styles.feeBox}>
-                    <Text style={styles.feeLabel}>ESTIMATED FEE</Text>
+                  <View style={styles.feeCallout}>
+                    <Text style={styles.feeLabel}>ESTIMATED FARE</Text>
                     <Text style={styles.feeValue}>{formatCurrency(session.totalFee)}</Text>
                   </View>
                 </View>
 
-                {/* Duration & Rule Info */}
-                <View style={styles.metricsRow}>
+                {/* Metrics Breakdown Grid */}
+                <View style={styles.metricsBox}>
                   <View style={styles.metricItem}>
-                    <Text style={styles.metricLabel}>ELAPSED TIME</Text>
-                    <Text style={styles.metricValue}>{session.durationFormatted}</Text>
+                    <Text style={styles.metricLabel}>ELAPSED DURATION</Text>
+                    <Text style={styles.metricVal}>{session.durationFormatted}</Text>
                   </View>
+
                   <View style={styles.metricItem}>
-                    <Text style={styles.metricLabel}>RATE POLICY</Text>
-                    <Text style={styles.metricValue}>₹50 / started 3h</Text>
+                    <Text style={styles.metricLabel}>TARIFF POLICY</Text>
+                    <Text style={styles.metricVal}>₹50 / 3-hr block</Text>
                   </View>
+
                   <View style={styles.metricItem}>
                     <Text style={styles.metricLabel}>STATUS</Text>
-                    <Text style={[styles.metricValue, { color: COLORS.warning }]}>
-                      {session.status}
-                    </Text>
+                    <View style={styles.activePill}>
+                      <View style={styles.activeDot} />
+                      <Text style={styles.activePillText}>{session.status}</Text>
+                    </View>
                   </View>
                 </View>
 
-                {/* Action Buttons */}
-                <View style={styles.actionsRow}>
+                {/* Card Actions */}
+                <View style={styles.cardActions}>
                   <TouchableOpacity
                     style={styles.recalcBtn}
                     onPress={() => handleRecalculateFare(session.id)}
                     disabled={isRecalculating || isCheckingOut}
+                    activeOpacity={0.8}
                   >
                     {isRecalculating ? (
-                      <ActivityIndicator size="small" color={COLORS.primary} />
+                      <ActivityIndicator size="small" color={COLORS.primaryLight} />
                     ) : (
-                      <Text style={styles.recalcBtnText}>Recalculate ⟳</Text>
+                      <Text style={styles.recalcBtnText}>Refresh Fee ⟳</Text>
                     )}
                   </TouchableOpacity>
 
@@ -211,11 +269,12 @@ export const ActiveSessionsScreen: React.FC<ActiveSessionsScreenProps> = ({
                     style={styles.checkoutBtn}
                     onPress={() => handleCheckoutPrompt(session)}
                     disabled={isCheckingOut || isRecalculating}
+                    activeOpacity={0.85}
                   >
                     {isCheckingOut ? (
-                      <ActivityIndicator size="small" color={COLORS.bgPrimary} />
+                      <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
-                      <Text style={styles.checkoutBtnText}>Checkout Vehicle →</Text>
+                      <Text style={styles.checkoutBtnText}>Check Out Vehicle →</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -246,167 +305,224 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgPrimary,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 14,
+    fontSize: 13,
     color: COLORS.textSecondary,
+    fontWeight: '600',
+  },
+  telemetryBar: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.cardBg,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    alignItems: 'center',
+  },
+  telemetryItem: {
+    flex: 1,
+  },
+  telemetryDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: COLORS.border,
+    marginHorizontal: 16,
+  },
+  telemetryLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 0.6,
+  },
+  telemetryValue: {
     fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    marginTop: 2,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    position: 'relative',
+  },
+  searchInput: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 13,
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+  },
+  clearSearchBtn: {
+    position: 'absolute',
+    right: 26,
+    top: 20,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.cardBgElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearSearchText: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    fontWeight: '800',
   },
   content: {
     padding: 16,
     paddingBottom: 40,
   },
-  card: {
+  sessionCard: {
     backgroundColor: COLORS.cardBg,
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 16,
-    marginBottom: 14,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  slotPill: {
-    backgroundColor: COLORS.primaryDark,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+  bayBadge: {
+    backgroundColor: COLORS.cardBgElevated,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    marginRight: 12,
   },
-  slotPillText: {
+  bayBadgeLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+  },
+  bayBadgeNumber: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: COLORS.cyanLight,
+  },
+  vehicleDetails: {
+    flex: 1,
+  },
+  plateNumber: {
     fontSize: 16,
     fontWeight: '900',
     color: COLORS.textPrimary,
-  },
-  vehicleInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  vehicleNumber: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
+    letterSpacing: 0.5,
   },
   entryTime: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textMuted,
     marginTop: 2,
   },
-  feeBox: {
+  feeCallout: {
     alignItems: 'flex-end',
   },
   feeLabel: {
     fontSize: 9,
-    fontWeight: '700',
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    color: COLORS.primaryLight,
+    letterSpacing: 0.6,
   },
   feeValue: {
     fontSize: 18,
     fontWeight: '900',
     color: COLORS.available,
+    marginTop: 1,
   },
-  metricsRow: {
+  metricsBox: {
     flexDirection: 'row',
-    backgroundColor: COLORS.bgPrimary,
-    borderRadius: 10,
-    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    justifyContent: 'space-between',
+    padding: 10,
     marginBottom: 14,
   },
   metricItem: {
     flex: 1,
   },
   metricLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: COLORS.textMuted,
-    marginBottom: 2,
+    letterSpacing: 0.5,
   },
-  metricValue: {
+  metricVal: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
     color: COLORS.textPrimary,
+    marginTop: 3,
   },
-  actionsRow: {
+  activePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3,
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.warning,
+  },
+  activePillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.warningText,
+  },
+  cardActions: {
     flexDirection: 'row',
     gap: 10,
   },
   recalcBtn: {
     flex: 1,
     backgroundColor: COLORS.cardBgElevated,
-    borderRadius: 10,
-    paddingVertical: 12,
+    paddingVertical: 11,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.borderLight,
   },
   recalcBtnText: {
-    color: COLORS.primary,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
+    color: COLORS.cyanLight,
   },
   checkoutBtn: {
     flex: 1.5,
-    backgroundColor: COLORS.occupied,
-    borderRadius: 10,
-    paddingVertical: 12,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 11,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
   },
   checkoutBtnText: {
-    color: COLORS.textPrimary,
-    fontSize: 13,
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: '800',
-  },
-  emptyContainer: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 18,
-    padding: 36,
-    alignItems: 'center',
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  emptyIconBox: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: COLORS.cardBgElevated,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  emptyIcon: {
-    fontSize: 28,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-  },
-  emptySubtitle: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginTop: 6,
-    marginBottom: 20,
-  },
-  bookShortcutBtn: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  bookShortcutBtnText: {
-    color: COLORS.bgPrimary,
-    fontSize: 14,
-    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 });

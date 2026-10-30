@@ -6,12 +6,14 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
+  TextInput,
   ActivityIndicator,
   Alert,
 } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { Header } from '../components/Header';
 import { InvoiceModal } from '../components/InvoiceModal';
+import { EmptyState } from '../components/EmptyState';
 import { sessionsApi } from '../api/endpoints';
 import { ParkingSession, Invoice } from '../types';
 import { formatCurrency, formatDateTime } from '../utils/formatting';
@@ -20,6 +22,7 @@ export const HistoryScreen: React.FC = () => {
   const [history, setHistory] = useState<ParkingSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -72,9 +75,19 @@ export const HistoryScreen: React.FC = () => {
       setActiveInvoice(invoice);
       setInvoiceModalVisible(true);
     } catch (err: any) {
-      Alert.alert('Invoice Error', err.message || 'Failed to fetch invoice.');
+      Alert.alert('Invoice Fetch Error', err.message || 'Failed to fetch invoice.');
     }
   };
+
+  const filteredHistory = history.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.trim().toLowerCase();
+    return (
+      item.vehicleNumber.toLowerCase().includes(q) ||
+      item.slotNumber.toLowerCase().includes(q) ||
+      item.id.toString().includes(q)
+    );
+  });
 
   const renderItem = ({ item }: { item: ParkingSession }) => {
     const isPaid = item.paymentStatus === 'PAID';
@@ -83,12 +96,14 @@ export const HistoryScreen: React.FC = () => {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
-            <View style={styles.slotTag}>
-              <Text style={styles.slotTagText}>{item.slotNumber}</Text>
+            <View style={styles.bayBadge}>
+              <Text style={styles.bayBadgeLabel}>BAY</Text>
+              <Text style={styles.bayBadgeValue}>{item.slotNumber}</Text>
             </View>
+
             <View>
-              <Text style={styles.vehicleNumber}>{item.vehicleNumber}</Text>
-              <Text style={styles.sessionDate}>ID: #{item.id}</Text>
+              <Text style={styles.plateNumber}>{item.vehicleNumber}</Text>
+              <Text style={styles.sessionId}>Audit ID: #{item.id}</Text>
             </View>
           </View>
 
@@ -97,14 +112,20 @@ export const HistoryScreen: React.FC = () => {
               styles.paymentBadge,
               {
                 backgroundColor: isPaid ? COLORS.availableBg : COLORS.warningBg,
-                borderColor: isPaid ? COLORS.available : COLORS.warning,
+                borderColor: isPaid ? COLORS.availableBorder : COLORS.warningBorder,
               },
             ]}
           >
+            <View
+              style={[
+                styles.paymentDot,
+                { backgroundColor: isPaid ? COLORS.available : COLORS.warning },
+              ]}
+            />
             <Text
               style={[
                 styles.paymentBadgeText,
-                { color: isPaid ? COLORS.availableText : COLORS.warning },
+                { color: isPaid ? COLORS.availableText : COLORS.warningText },
               ]}
             >
               {item.paymentStatus}
@@ -112,32 +133,37 @@ export const HistoryScreen: React.FC = () => {
           </View>
         </View>
 
-        <View style={styles.timestampsBox}>
+        {/* Timeline Details */}
+        <View style={styles.timelineBox}>
           <View style={styles.timeRow}>
-            <Text style={styles.timeLabel}>Entry:</Text>
+            <Text style={styles.timeLabel}>Check-In:</Text>
             <Text style={styles.timeVal}>{formatDateTime(item.entryTime)}</Text>
           </View>
           <View style={styles.timeRow}>
-            <Text style={styles.timeLabel}>Exit:</Text>
+            <Text style={styles.timeLabel}>Check-Out:</Text>
             <Text style={styles.timeVal}>{formatDateTime(item.exitTime)}</Text>
           </View>
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>Duration:</Text>
-            <Text style={styles.timeVal}>{item.durationFormatted}</Text>
+            <Text style={[styles.timeVal, { color: COLORS.cyanLight }]}>
+              {item.durationFormatted}
+            </Text>
           </View>
         </View>
 
+        {/* Footer with Final Charge & Invoice Action */}
         <View style={styles.cardFooter}>
           <View>
-            <Text style={styles.feeLabel}>FINAL CHARGE</Text>
+            <Text style={styles.feeLabel}>SETTLED AMOUNT</Text>
             <Text style={styles.feeAmount}>{formatCurrency(item.totalFee)}</Text>
           </View>
 
           <TouchableOpacity
             style={styles.invoiceBtn}
             onPress={() => handleViewInvoice(item.id)}
+            activeOpacity={0.8}
           >
-            <Text style={styles.invoiceBtnText}>View Invoice 📄</Text>
+            <Text style={styles.invoiceBtnText}>View Receipt 📄</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -147,42 +173,73 @@ export const HistoryScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Header
-        title="Parking History"
-        subtitle="Completed vehicle parking sessions & invoices"
+        title="Session Ledger"
+        subtitle="Audited history of completed checkouts and billing invoices"
+        badge="ARCHIVE"
+        rightActionText="Sync ⟳"
+        onRightAction={() => fetchHistory(0, false)}
       />
 
-      {loading ? (
+      {/* Search Input Filter */}
+      {history.length > 0 && (
+        <View style={styles.searchBarContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search history by plate, bay, or session ID..."
+            placeholderTextColor={COLORS.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="characters"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
+              <Text style={styles.clearSearchText}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {loading && history.length === 0 ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading parking history...</Text>
+          <Text style={styles.loadingText}>Retrieving audit records...</Text>
         </View>
       ) : (
         <FlatList
-          data={history}
-          keyExtractor={(item) => item.id.toString()}
+          data={filteredHistory}
           renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
           }
           onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={
+            <EmptyState
+              icon="📜"
+              title={history.length === 0 ? 'No Completed Sessions Yet' : 'No Matching Records'}
+              description={
+                history.length === 0
+                  ? 'There are no completed parking sessions in the facility database. Check out an active session to see records logged here.'
+                  : `No historical checkouts match "${searchQuery}". Clear your search query to see all records.`
+              }
+              actionLabel={history.length > 0 ? 'Clear Search' : undefined}
+              onAction={history.length > 0 ? () => setSearchQuery('') : undefined}
+            />
+          }
           ListFooterComponent={
             loadingMore ? (
-              <ActivityIndicator color={COLORS.primary} style={{ marginVertical: 16 }} />
+              <View style={styles.loadingMoreBox}>
+                <ActivityIndicator color={COLORS.primary} size="small" />
+                <Text style={styles.loadingMoreText}>Loading more records...</Text>
+              </View>
             ) : undefined
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>No Parking History Yet</Text>
-              <Text style={styles.emptyText}>
-                Completed vehicle checkout sessions will appear here with invoices.
-              </Text>
-            </View>
           }
         />
       )}
 
+      {/* Invoice Modal for Past Sessions */}
       <InvoiceModal
         visible={invoiceModalVisible}
         invoice={activeInvoice}
@@ -200,13 +257,47 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
+    backgroundColor: COLORS.bgPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 14,
+    fontSize: 13,
     color: COLORS.textSecondary,
-    fontSize: 14,
+    fontWeight: '600',
+  },
+  searchBarContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    position: 'relative',
+  },
+  searchInput: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 13,
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+  },
+  clearSearchBtn: {
+    position: 'absolute',
+    right: 26,
+    top: 20,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.cardBgElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearSearchText: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    fontWeight: '800',
   },
   listContent: {
     padding: 16,
@@ -214,11 +305,16 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: COLORS.cardBg,
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -229,46 +325,63 @@ const styles = StyleSheet.create({
   cardHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
-  slotTag: {
-    backgroundColor: COLORS.primaryDark,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  bayBadge: {
+    backgroundColor: COLORS.cardBgElevated,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  slotTagText: {
-    color: COLORS.textPrimary,
+  bayBadgeLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+  },
+  bayBadgeValue: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '900',
+    color: COLORS.cyanLight,
   },
-  vehicleNumber: {
-    fontSize: 16,
-    fontWeight: '800',
+  plateNumber: {
+    fontSize: 15,
+    fontWeight: '900',
     color: COLORS.textPrimary,
+    letterSpacing: 0.5,
   },
-  sessionDate: {
+  sessionId: {
     fontSize: 11,
     color: COLORS.textMuted,
     marginTop: 2,
   },
   paymentBadge: {
-    paddingHorizontal: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 9,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
+    gap: 6,
+  },
+  paymentDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   paymentBadgeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  timestampsBox: {
-    backgroundColor: COLORS.bgPrimary,
-    borderRadius: 10,
-    padding: 10,
+  timelineBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
+    padding: 10,
     gap: 4,
     marginBottom: 12,
   },
@@ -277,13 +390,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   timeLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textMuted,
+    fontWeight: '600',
   },
   timeVal: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
     color: COLORS.textSecondary,
+    fontWeight: '700',
   },
   cardFooter: {
     flexDirection: 'row',
@@ -295,46 +409,39 @@ const styles = StyleSheet.create({
   },
   feeLabel: {
     fontSize: 9,
-    fontWeight: '700',
+    fontWeight: '800',
     color: COLORS.textMuted,
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
   feeAmount: {
     fontSize: 18,
     fontWeight: '900',
     color: COLORS.available,
+    marginTop: 1,
   },
   invoiceBtn: {
     backgroundColor: COLORS.cardBgElevated,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.borderLight,
   },
   invoiceBtnText: {
-    color: COLORS.primaryLight,
     fontSize: 12,
     fontWeight: '700',
-  },
-  emptyContainer: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 16,
-    padding: 30,
-    alignItems: 'center',
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '800',
     color: COLORS.textPrimary,
   },
-  emptyText: {
-    fontSize: 13,
+  loadingMoreBox: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
+  loadingMoreText: {
+    fontSize: 11,
     color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginTop: 6,
+    fontWeight: '600',
   },
 });
